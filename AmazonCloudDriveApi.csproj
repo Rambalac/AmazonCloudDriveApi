@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,7 +39,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\Newtonsoft.Json.8.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -53,6 +54,10 @@
     <Compile Include="AmazonNodes.cs" />
     <Compile Include="CloudDriveScope.cs" />
     <Compile Include="AmazonDrive.cs" />
+    <Compile Include="FileUpload.cs" />
+    <Compile Include="HttpClient.cs" />
+    <Compile Include="HttpWebException.cs" />
+    <Compile Include="HttpWebRequestExtensions.cs" />
     <Compile Include="JsonObjects\AmazonNode.cs" />
     <Compile Include="JsonObjects\AuthToken.cs" />
     <Compile Include="JsonObjects\Children.cs" />
@@ -63,16 +68,11 @@
     <Compile Include="JsonObjects\Quota.cs" />
     <Compile Include="JsonObjects\Usage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Retry.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Tools\Tools.csproj">
-      <Project>{199cdb28-7472-41bd-bb1f-bf345451a68d}</Project>
-      <Name>Tools</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
