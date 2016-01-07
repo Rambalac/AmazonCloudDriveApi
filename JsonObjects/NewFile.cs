@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-    public class NewChild
+    internal class NewChild
     {
         public string name;
         public string kind;

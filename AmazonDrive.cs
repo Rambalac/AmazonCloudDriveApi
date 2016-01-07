@@ -14,7 +14,9 @@ using System.Web;
 
 namespace Azi.Amazon.CloudDrive
 {
-
+    /// <summary>
+    /// Root class for API. Provides authentication methods.
+    /// </summary>
     public class AmazonDrive
     {
         internal static readonly TimeSpan generalExpiration = TimeSpan.FromMinutes(5);
@@ -27,8 +29,34 @@ namespace Azi.Amazon.CloudDrive
         private AuthToken token;
 
         internal readonly Tools.HttpClient http;
+
+        /// <summary>
+        /// Account related part of API
+        /// </summary>
         public readonly AmazonAccount Account;
 
+        /// <summary>
+        /// Nodes management part of API
+        /// </summary>
+        public readonly AmazonNodes Nodes;
+
+        /// <summary>
+        /// File upload and download part of API
+        /// </summary>
+        public readonly AmazonFiles Files;
+
+        /// <summary>
+        /// Start of 3 ports range used in localhost redirect listener for authentication
+        /// </summary>
+        public int ListenerPortStart { get; set; } = 45674;
+
+        /// <summary>
+        /// Authenticate using know auth token, renew token and expiration time
+        /// </summary>
+        /// <param name="authToken"></param>
+        /// <param name="authRenewToken"></param>
+        /// <param name="authTokenExpiration"></param>
+        /// <returns>True if authenticated</returns>
         public async Task<bool> Authentication(string authToken, string authRenewToken, DateTime authTokenExpiration)
         {
             token = new AuthToken
@@ -43,9 +71,11 @@ namespace Azi.Amazon.CloudDrive
             return token != null;
         }
 
-        public readonly AmazonNodes Nodes;
-        public readonly AmazonFiles Files;
-
+        /// <summary>
+        /// Creates instance of API
+        /// </summary>
+        /// <param name="clientId">Your App ClientID. From Amazon Developers Console.</param>
+        /// <param name="clientSecret">Your App Secret. From Amazon Developers Console.</param>
         public AmazonDrive(string clientId, string clientSecret)
         {
             this.clientSecret = clientSecret;
@@ -111,7 +141,8 @@ namespace Azi.Amazon.CloudDrive
         }
 
         static readonly Regex browserPathPattern = new Regex("^(?<path>[^\" ]+)|\"(?<path>[^\"]+)\" (?<args>.*)$");
-        public Process OpenUrlInDefaultBrowser(string url)
+
+        private Process OpenUrlInDefaultBrowser(string url)
         {
             using (var nameKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice", false))
             {
@@ -128,26 +159,43 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout)
+        private int DefaultPortSelector(int lastPort, int time)
+        {
+            if (time == 0) return ListenerPortStart;
+            if (time > 2) throw new InvalidOperationException("Cannot select port for redirect url");
+            return lastPort + 1;
+
+        }
+
+        /// <summary>
+        /// Opens Amazon Cloud Drive authentication in default browser. Then it starts listener for port 45674
+        /// </summary>
+        /// <param name="scope">Your App scope to access cloud</param>
+        /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
+        /// <param name="portSelector">Func to select port for redirect listener. 
+        /// portSelector(int lastPort, int time) where lastPost is port used last time and time is number of times selector was called before</param>
+        /// <returns>True if authenticated</returns>
+        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, Func<int, int, int> portSelector = null)
         {
             using (var listener = new HttpListener())
             {
-                int port = 45674;
+                int port = 0;
                 string redirectUrl = null;
-
-                if (!Retry.Do(3, (time) =>
+                int time = 0;
+                while (true)
                 {
                     try
                     {
-                        redirectUrl = $"http://localhost:{port + time}/signin/";
+                        port = portSelector(port, time);
+                        redirectUrl = $"http://localhost:{port}/signin/";
                         listener.Prefixes.Add(redirectUrl);
-                        return true;
+                        break;
                     }
                     catch (HttpListenerException)
                     {
-                        return false;
+                        //Skip, try another port
                     }
-                })) throw new InvalidOperationException("Cannot select port for redirect url");
+                }
 
                 listener.Start();
                 using (var tabProcess = Process.Start(BuildLoginUrl(clientId, redirectUrl, scope)))
@@ -179,7 +227,6 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task ProcessRedirect(HttpListenerContext context, string clientId, string secret, string redirectUrl)
         {
-            ///signin/?error_description=Access+not+permitted.&error=access_denied
             var error = HttpUtility.ParseQueryString(context.Request.Url.Query).Get("error_description");
 
             if (error != null)
@@ -226,6 +273,9 @@ namespace Azi.Amazon.CloudDrive
             {CloudDriveScope.Write,"clouddrive:write" }
         };
 
+        /// <summary>
+        /// Callback called when auth token get updated on authentication or renewal.
+        /// </summary>
         public Action<string, string, DateTime> OnTokenUpdate { get; set; }
 
         private static string ScopeToString(CloudDriveScope scope)

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Azi.Tools
 {
-    public static class Retry
+    internal static class Retry
     {
         public static bool Do(int times, Func<bool> act)
         {

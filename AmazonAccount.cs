@@ -5,6 +5,9 @@ using Azi.Amazon.CloudDrive.JsonObjects;
 
 namespace Azi.Amazon.CloudDrive
 {
+    /// <summary>
+    /// Account related part of API
+    /// </summary>
     public class AmazonAccount
     {
         Endpoint _endpoint;
@@ -21,6 +24,10 @@ namespace Azi.Amazon.CloudDrive
             this.amazon = amazonDrive;
         }
 
+        /// <summary>
+        /// Request for API endpoints. Cached in memory for 3 days.
+        /// </summary>
+        /// <returns></returns>
         public async Task<Endpoint> GetEndpoint()
         {
             if (_endpoint == null || DateTime.UtcNow - _endpoint.lastCalculated > endpointExpiration)
@@ -30,6 +37,10 @@ namespace Azi.Amazon.CloudDrive
             return _endpoint;
         }
 
+        /// <summary>
+        /// Request for drive quota info.
+        /// </summary>
+        /// <returns></returns>
         public async Task<Quota> GetQuota()
         {
             if (_quota == null || DateTime.UtcNow - _quota.lastCalculated > generalExpiration)
@@ -39,6 +50,10 @@ namespace Azi.Amazon.CloudDrive
             return _quota;
         }
 
+        /// <summary>
+        /// Request for drive usage info.
+        /// </summary>
+        /// <returns></returns>
         public async Task<Usage> GetUsage()
         {
             if (_usage == null || DateTime.UtcNow - _usage.lastCalculated > generalExpiration)

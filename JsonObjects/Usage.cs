@@ -2,21 +2,39 @@
 
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class Usage
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public class TotalAndBillable
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             public class Amount
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
             {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
                 public long bytes { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
                 public long count { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
             }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             public Amount total { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             public Amount billable { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         }
 
+        /// <summary>
+        /// Total size of all files of all types
+        /// </summary>
         public TotalAndBillable total
         {
             get
@@ -36,10 +54,24 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
                 };
             }
         }
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public DateTime lastCalculated { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public TotalAndBillable other { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public TotalAndBillable doc { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public TotalAndBillable photo { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public TotalAndBillable video { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }
