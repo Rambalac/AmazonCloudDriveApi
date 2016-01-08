@@ -186,7 +186,7 @@ namespace Azi.Amazon.CloudDrive
                 {
                     try
                     {
-                        port = portSelector(port, time);
+                        port = (portSelector ?? DefaultPortSelector).Invoke(port, time);
                         redirectUrl = $"http://localhost:{port}/signin/";
                         listener.Prefixes.Add(redirectUrl);
                         break;
