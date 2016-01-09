@@ -260,11 +260,12 @@ namespace Azi.Tools
             var result = new MemoryStream(1000);
             using (var writer = new StreamWriter(result, UTF8, 16, true))
             {
-                foreach (var pair in file.Parameters)
-                {
-                    writer.Write($"--{boundry}\r\n");
-                    writer.Write($"Content-Disposition: form-data; name=\"{pair.Key}\"\r\n\r\n{pair.Value}\r\n");
-                }
+                if (file.Parameters != null)
+                    foreach (var pair in file.Parameters)
+                    {
+                        writer.Write($"--{boundry}\r\n");
+                        writer.Write($"Content-Disposition: form-data; name=\"{pair.Key}\"\r\n\r\n{pair.Value}\r\n");
+                    }
 
                 writer.Write($"--{boundry}\r\n");
                 writer.Write($"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
