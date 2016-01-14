@@ -13,7 +13,7 @@ using System.Runtime.Serialization;
 
 namespace Azi.Tools
 {
-    public static class HttpWebRequestExtensions
+    internal static class HttpWebRequestExtensions
     {
         static readonly HttpStatusCode[] successStatusCodes = { HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.PartialContent };
         public static bool IsSuccessStatusCode(this HttpWebResponse response) => successStatusCodes.Contains(response.StatusCode);

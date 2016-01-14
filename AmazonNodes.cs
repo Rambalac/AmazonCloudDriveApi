@@ -10,17 +10,28 @@ using HttpClient = Azi.Tools.HttpClient;
 
 namespace Azi.Amazon.CloudDrive
 {
-
+    /// <summary>
+    /// Files and folders manipulating part of API
+    /// </summary>
     public class AmazonNodes
     {
         private readonly AmazonDrive amazon;
         private HttpClient http => amazon.http;
+        private readonly static Regex filterEscapeChars = new Regex("[ \\+\\-&|!(){}[\\]^'\"~\\*\\?:\\\\]");
+        private AmazonNode root;
 
-        public AmazonNodes(AmazonDrive amazonDrive)
+
+        internal AmazonNodes(AmazonDrive amazonDrive)
         {
             this.amazon = amazonDrive;
         }
 
+
+        /// <summary>
+        /// Requests for node information by its Id
+        /// </summary>
+        /// <param name="id">Node id</param>
+        /// <returns>Node info or null</returns>
         public async Task<AmazonNode> GetNode(string id)
         {
             var url = "{0}nodes/{1}";
@@ -28,6 +39,11 @@ namespace Azi.Amazon.CloudDrive
             return result;
         }
 
+        /// <summary>
+        /// Requests for all nodes info belonging to specified parent
+        /// </summary>
+        /// <param name="id">Parent node id. If null Root folder is presumed</param>
+        /// <returns>List of nodes info</returns>
         public async Task<IList<AmazonNode>> GetChildren(string id = null)
         {
             if (id == null) id = (await GetRoot()).id;
@@ -52,7 +68,6 @@ namespace Azi.Amazon.CloudDrive
             return result;
         }
 
-        readonly static Regex filterEscapeChars = new Regex("[ \\+\\-&|!(){}[\\]^'\"~\\*\\?:\\\\]");
         private string MakeNameFilter(string name)
         {
             return "name:" + filterEscapeChars.Replace(name, "\\$0");
@@ -68,6 +83,12 @@ namespace Azi.Amazon.CloudDrive
             return "contentProperties.md5:" + md5;
         }
 
+        /// <summary>
+        /// Requests for node info with specified name and parent
+        /// </summary>
+        /// <param name="parentid">Parent node Id to look in</param>
+        /// <param name="name">Name of node to look for</param>
+        /// <returns>Node info</returns>
         public async Task<AmazonNode> GetChild(string parentid, string name)
         {
             if (parentid == null) parentid = (await GetRoot()).id;
@@ -81,18 +102,37 @@ namespace Azi.Amazon.CloudDrive
             return result.data[0];
         }
 
+        /// <summary>
+        /// Requests to add node to parent. Each node can have multiple parents.
+        /// </summary>
+        /// <param name="parentid">Parent node id.</param>
+        /// <param name="nodeid">Node id to add.</param>
+        /// <returns>Operation Task</returns>
         public async Task Add(string parentid, string nodeid)
         {
             var url = string.Format("{0}/nodes/{1}/children/{2}", await amazon.GetMetadataUrl(), parentid, nodeid);
             await http.Send<object>(HttpMethod.Put, url);
         }
 
+        /// <summary>
+        /// Request to remove node from parent. Nodes can have multiple parents. 
+        /// if you remove node from all parents it will not be trashed. 
+        /// If you remove file node from all parents without trash and decide to upload file with the same MD5 and duplication check then file will be rejected as Conflict.
+        /// </summary>
+        /// <param name="parentid">Parent node id to remove from.</param>
+        /// <param name="nodeid">Node id to remove.</param>
+        /// <returns>Operation Task</returns>
         public async Task Remove(string parentid, string nodeid)
         {
             var url = string.Format("{0}/nodes/{1}/children/{2}", await amazon.GetMetadataUrl(), parentid, nodeid);
             await http.Send<object>(HttpMethod.Delete, url);
         }
 
+        /// <summary>
+        /// Requests to move node to trash. Nodes can be in several parents, nodes will become unavailable in all parents.
+        /// </summary>
+        /// <param name="id">Node id to trash</param>
+        /// <returns>Operation Task</returns>
         public async Task Trash(string id)
         {
             var url = string.Format("{0}trash/{1}", await amazon.GetMetadataUrl(), id);
@@ -100,6 +140,12 @@ namespace Azi.Amazon.CloudDrive
             await http.Send<object>(HttpMethod.Put, url);
         }
 
+        /// <summary>
+        /// Create Folder node
+        /// </summary>
+        /// <param name="parentId">Parent node id</param>
+        /// <param name="name">Folder name</param>
+        /// <returns></returns>
         public async Task<AmazonNode> CreateFolder(string parentId, string name)
         {
             var url = string.Format("{0}nodes", await amazon.GetMetadataUrl());
@@ -107,7 +153,10 @@ namespace Azi.Amazon.CloudDrive
             return await http.Post<NewChild, AmazonNode>(url, folder);
         }
 
-        AmazonNode root;
+        /// <summary>
+        /// Requests for Root folder node info. Cached without expiration.
+        /// </summary>
+        /// <returns>Root folder node info</returns>
         public async Task<AmazonNode> GetRoot()
         {
             if (root != null) return root;
@@ -120,6 +169,12 @@ namespace Azi.Amazon.CloudDrive
             return root;
         }
 
+        /// <summary>
+        /// Requests to change name of node, file or folder.
+        /// </summary>
+        /// <param name="id">Node id to rename</param>
+        /// <param name="newName">New name</param>
+        /// <returns>Node info with new name</returns>
         public async Task<AmazonNode> Rename(string id, string newName)
         {
             var url = "{0}nodes/{1}";
@@ -130,6 +185,14 @@ namespace Azi.Amazon.CloudDrive
             return await http.Patch<object, AmazonNode>(string.Format(url, await amazon.GetMetadataUrl(), id), data);
         }
 
+        /// <summary>
+        /// Requests to change specified parent id to another. 
+        /// Nodes can have multiple parents, method will change only specified one.
+        /// </summary>
+        /// <param name="id">Node id to move</param>
+        /// <param name="oldDirId">Existing parent node id to remove</param>
+        /// <param name="newDirId">Another Folder node id to add as parent</param>
+        /// <returns></returns>
         public async Task<AmazonNode> Move(string id, string oldDirId, string newDirId)
         {
             var url = "{0}nodes/{1}/children";
@@ -141,6 +204,11 @@ namespace Azi.Amazon.CloudDrive
             return await http.Post<object, AmazonNode>(string.Format(url, await amazon.GetMetadataUrl(), newDirId), data);
         }
 
+        /// <summary>
+        /// Requests for file node info with specified MD5
+        /// </summary>
+        /// <param name="md5">MD5 as low case hex without separators</param>
+        /// <returns>Found node info or null</returns>
         public async Task<AmazonNode> GetNodeByMD5(string md5)
         {
             var url = string.Format("{0}nodes?filters={1}", await amazon.GetMetadataUrl(), MakeMD5Filter(md5));

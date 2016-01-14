@@ -13,22 +13,23 @@ using System.Runtime.Serialization;
 
 namespace Azi.Tools
 {
+    /// <summary>
+    /// Http error with Status Code
+    /// </summary>
     [Serializable]
     public class HttpWebException : Exception
     {
+        /// <summary>
+        /// Http Status Code
+        /// </summary>
         public readonly HttpStatusCode StatusCode;
-        public HttpWebException(string message, HttpStatusCode code) : base(message)
+        internal HttpWebException(string message, HttpStatusCode code) : base(message)
         {
             this.StatusCode = code;
         }
-        public HttpWebException(string message, HttpStatusCode code, Exception e) : base(message, e)
+        internal HttpWebException(string message, HttpStatusCode code, Exception e) : base(message, e)
         {
             this.StatusCode = code;
-        }
-
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
         }
     }
 }

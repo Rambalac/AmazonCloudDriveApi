@@ -16,7 +16,7 @@ namespace Azi.Tools
     /// <summary>
     /// Http helper class to send REST api requests
     /// </summary>
-    public class HttpClient
+    internal class HttpClient
     {
         Func<HttpWebRequest, Task> settingsSetter;
         const int retryTimes = 100;
