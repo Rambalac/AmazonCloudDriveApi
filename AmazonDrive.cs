@@ -204,7 +204,7 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <summary>
-        /// Opens Amazon Cloud Drive authentication in default browser. Then it starts listener for port 45674
+        /// Opens Amazon Cloud Drive authentication in default browser. Then it starts listener for port 45674 if portSelector is null
         /// </summary>
         /// <param name="scope">Your App scope to access cloud</param>
         /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
