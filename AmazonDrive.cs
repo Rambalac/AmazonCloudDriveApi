@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Cache;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -46,7 +47,7 @@ namespace Azi.Amazon.CloudDrive
         public readonly AmazonFiles Files;
 
         /// <summary>
-        /// Start of 3 ports range used in localhost redirect listener for authentication
+        /// Start of 3 ports range used in localhost redirect listener for authentication with default port selector
         /// </summary>
         public int ListenerPortStart { get; set; } = 45674;
 
@@ -167,61 +168,84 @@ namespace Azi.Amazon.CloudDrive
 
         }
 
+        private HttpListener redirectListener;
+        private string redirectUrl;
+
+        private void CreateListener(Func<int, int, int> portSelector = null)
+        {
+            if (redirectListener != null)
+            {
+                redirectListener.Close();
+            }
+
+            var listener = new HttpListener();
+            int port = 0;
+            int time = 0;
+            while (true)
+            {
+                try
+                {
+                    port = (portSelector ?? DefaultPortSelector).Invoke(port, time++);
+                    redirectUrl = $"http://localhost:{port}/signin/";
+                    listener.Prefixes.Add(redirectUrl);
+                    redirectListener = listener;
+                    return;
+                }
+                catch (HttpListenerException)
+                {
+                    //Skip, try another port
+                }
+                catch (InvalidOperationException)
+                {
+                    listener.Close();
+                    throw;
+                }
+            }
+        }
+
         /// <summary>
         /// Opens Amazon Cloud Drive authentication in default browser. Then it starts listener for port 45674
         /// </summary>
         /// <param name="scope">Your App scope to access cloud</param>
         /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
         /// <param name="portSelector">Func to select port for redirect listener. 
-        /// portSelector(int lastPort, int time) where lastPost is port used last time and time is number of times selector was called before</param>
+        /// portSelector(int lastPort, int time) where lastPost is port used last time and 
+        /// time is number of times selector was called before. To abort port selection throw exception other than HttpListenerException</param>
+        /// <param name="cancelToken">Cancellation for auth. Can be null.</param>
         /// <returns>True if authenticated</returns>
-        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, Func<int, int, int> portSelector = null)
+        /// <exception cref="InvalidOperationException">if any selected port could not be opened by default selector</exception>
+        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = null, Func<int, int, int> portSelector = null)
         {
-            using (var listener = new HttpListener())
+            CreateListener(portSelector);
+
+            redirectListener.Start();
+            using (var tabProcess = Process.Start(BuildLoginUrl(clientId, redirectUrl, scope)))
             {
-                int port = 0;
-                string redirectUrl = null;
-                int time = 0;
-                while (true)
+                try
                 {
-                    try
+                    var task = redirectListener.GetContextAsync();
+                    var timeoutTask = (cancelToken != null) ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
+                    var anytask = await Task.WhenAny(task, timeoutTask);
+                    if (anytask == task)
                     {
-                        port = (portSelector ?? DefaultPortSelector).Invoke(port, time);
-                        redirectUrl = $"http://localhost:{port}/signin/";
-                        listener.Prefixes.Add(redirectUrl);
-                        break;
+                        await ProcessRedirect(await task, clientId, clientSecret, redirectUrl);
+
+                        this.scope = scope;
                     }
-                    catch (HttpListenerException)
+                    else
                     {
-                        //Skip, try another port
+                        if (timeoutTask.IsCanceled) return false;
+                        throw new TimeoutException("No redirection detected");
                     }
                 }
-
-                listener.Start();
-                using (var tabProcess = Process.Start(BuildLoginUrl(clientId, redirectUrl, scope)))
+                finally
                 {
-                    try
-                    {
-                        var task = listener.GetContextAsync();
-                        if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
-                        {
-                            await ProcessRedirect(await task, clientId, clientSecret, redirectUrl);
-
-                            this.scope = scope;
-                        }
-                        else
-                        {
-                            throw new TimeoutException("No redirection detected");
-                        }
-                    }
-                    finally
-                    {
-                        listener.Stop();
-                        //tabProcess.Kill();
-                    }
+                    redirectListener.Close();
+                    redirectListener = null;
+                    //tabProcess.Kill();
                 }
-
             }
+
             return token != null;
         }
 

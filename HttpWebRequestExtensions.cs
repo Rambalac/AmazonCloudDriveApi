@@ -13,10 +13,19 @@ using System.Runtime.Serialization;
 
 namespace Azi.Tools
 {
-    internal static class HttpWebRequestExtensions
+    /// <summary>
+    /// Helper methods to work with Http protocol
+    /// </summary>
+    public static class HttpWebRequestExtensions
     {
-        static readonly HttpStatusCode[] successStatusCodes = { HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.PartialContent };
-        public static bool IsSuccessStatusCode(this HttpWebResponse response) => successStatusCodes.Contains(response.StatusCode);
+        private static readonly HttpStatusCode[] successStatusCodes = { HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.PartialContent };
+        internal static bool IsSuccessStatusCode(this HttpWebResponse response) => successStatusCodes.Contains(response.StatusCode);
+
+        /// <summary>
+        /// Returns response as string.
+        /// </summary>
+        /// <param name="response">Response to read.</param>
+        /// <returns>String of response.</returns>
         public static async Task<string> ReadAsStringAsync(this HttpWebResponse response)
         {
             using (var reader = new StreamReader(response.GetResponseStream()))
@@ -25,12 +34,23 @@ namespace Azi.Tools
             }
         }
 
+        /// <summary>
+        /// Returns object as parsed JSON from response.
+        /// </summary>
+        /// <typeparam name="T">Type of object to parse</typeparam>
+        /// <param name="response">Response to parse</param>
+        /// <returns>Parsed object</returns>
         public static async Task<T> ReadAsAsync<T>(this HttpWebResponse response)
         {
             var text = await response.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<T>(text);
         }
 
+        /// <summary>
+        /// Returns ContentRange from headers.
+        /// </summary>
+        /// <param name="headers">Headers collection</param>
+        /// <returns>ContentRange object</returns>
         public static ContentRangeHeaderValue GetContentRange(this WebHeaderCollection headers)
         {
             return ContentRangeHeaderValue.Parse(headers["Content-Range"]);
