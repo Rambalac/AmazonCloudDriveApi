@@ -27,10 +27,11 @@ namespace Azi.Amazon.CloudDrive
         private string clientSecret;
 
         private CloudDriveScope scope;
-        private AuthToken token;
 
         internal readonly Tools.HttpClient http;
 
+        public AuthToken Token { get; private set; }
+        
         /// <summary>
         /// Account related part of API
         /// </summary>
@@ -60,7 +61,7 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>True if authenticated</returns>
         public async Task<bool> Authentication(string authToken, string authRenewToken, DateTime authTokenExpiration)
         {
-            token = new AuthToken
+            Token = new AuthToken
             {
                 expires_in = 0,
                 createdTime = authTokenExpiration,
@@ -69,7 +70,7 @@ namespace Azi.Amazon.CloudDrive
                 token_type = "bearer"
             };
             await UpdateToken();
-            return token != null;
+            return Token != null;
         }
 
         /// <summary>
@@ -103,7 +104,7 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task SettingsSetter(HttpWebRequest client)
         {
-            if (token != null && !updatingToken)
+            if (Token != null && !updatingToken)
                 client.Headers.Add("Authorization", "Bearer " + await GetToken());
             client.CachePolicy = standartCache;
             client.UserAgent = "AZIACDDokanNet/" + this.GetType().Assembly.ImageRuntimeVersion;
@@ -119,9 +120,9 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task<string> GetToken()
         {
-            if (token == null) throw new InvalidOperationException("Not authenticated");
-            if (token.IsExpired) await UpdateToken();
-            return token?.access_token;
+            if (Token == null) throw new InvalidOperationException("Not authenticated");
+            if (Token.IsExpired) await UpdateToken();
+            return Token?.access_token;
         }
 
         bool updatingToken = false;
@@ -131,13 +132,13 @@ namespace Azi.Amazon.CloudDrive
             var form = new Dictionary<string, string>
                     {
                         {"grant_type","refresh_token" },
-                        {"refresh_token",token.refresh_token},
+                        {"refresh_token",Token.refresh_token},
                         {"client_id",clientId},
                         {"client_secret",clientSecret}
                     };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form);
-            if (token != null)
-                OnTokenUpdate?.Invoke(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+            Token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form);
+            if (Token != null)
+                OnTokenUpdate?.Invoke(Token.access_token, Token.refresh_token, DateTime.UtcNow.AddSeconds(Token.expires_in));
             updatingToken = false;
         }
 
@@ -246,7 +247,7 @@ namespace Azi.Amazon.CloudDrive
                 }
             }
 
-            return token != null;
+            return Token != null;
         }
 
         private async Task ProcessRedirect(HttpListenerContext context, string clientId, string secret, string redirectUrl)
@@ -270,9 +271,9 @@ namespace Azi.Amazon.CloudDrive
                                     {"client_secret",secret},
                                     {"redirect_uri",redirectUrl}
                                 };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form);
-            if (token != null)
-                OnTokenUpdate?.Invoke(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+            Token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form);
+            if (Token != null)
+                OnTokenUpdate?.Invoke(Token.access_token, Token.refresh_token, DateTime.UtcNow.AddSeconds(Token.expires_in));
 
             await Account.GetEndpoint();
         }
