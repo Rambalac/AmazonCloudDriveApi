@@ -35,7 +35,7 @@ namespace Azi.Amazon.CloudDrive
         public async Task<AmazonNode> GetNode(string id)
         {
             var url = "{0}nodes/{1}";
-            var result = await http.GetJsonAsync<AmazonNode>(string.Format(url, await amazon.GetMetadataUrl(), id));
+            var result = await http.GetJsonAsync<AmazonNode>(string.Format(url, await amazon.GetMetadataUrl().ConfigureAwait(false), id)).ConfigureAwait(false);
             return result;
         }
 
@@ -46,8 +46,8 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>List of nodes info</returns>
         public async Task<IList<AmazonNode>> GetChildren(string id = null)
         {
-            if (id == null) id = (await GetRoot()).id;
-            var baseurl = string.Format("{0}nodes/{1}/children", await amazon.GetMetadataUrl(), id);
+            if (id == null) id = (await GetRoot().ConfigureAwait(false)).id;
+            var baseurl = string.Format("{0}nodes/{1}/children", await amazon.GetMetadataUrl().ConfigureAwait(false), id);
             var result = new List<AmazonNode>();
             string nextToken = null;
             do
@@ -55,7 +55,7 @@ namespace Azi.Amazon.CloudDrive
                 var url = string.IsNullOrWhiteSpace(nextToken) ? baseurl : baseurl + "?startToken=" + nextToken;
                 try
                 {
-                    var children = await http.GetJsonAsync<Children>(url);
+                    var children = await http.GetJsonAsync<Children>(url).ConfigureAwait(false);
                     result.AddRange(children.data.Where(n => n.parents.Contains(id))); // Hack for wrong Amazon output when file location was changed recently
                     nextToken = children.nextToken;
                 }
@@ -91,9 +91,9 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>Node info</returns>
         public async Task<AmazonNode> GetChild(string parentid, string name)
         {
-            if (parentid == null) parentid = (await GetRoot()).id;
-            var url = string.Format("{0}nodes?filters={1} AND {2}", await amazon.GetMetadataUrl(), MakeParentFilter(parentid), MakeNameFilter(name));
-            var result = await http.GetJsonAsync<Children>(url);
+            if (parentid == null) parentid = (await GetRoot().ConfigureAwait(false)).id;
+            var url = string.Format("{0}nodes?filters={1} AND {2}", await amazon.GetMetadataUrl().ConfigureAwait(false), MakeParentFilter(parentid), MakeNameFilter(name));
+            var result = await http.GetJsonAsync<Children>(url).ConfigureAwait(false);
             if (result.count == 0) return null;
             if (result.count != 1) throw new InvalidOperationException("Duplicated node name");
 
@@ -110,8 +110,8 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>Operation Task</returns>
         public async Task Add(string parentid, string nodeid)
         {
-            var url = string.Format("{0}/nodes/{1}/children/{2}", await amazon.GetMetadataUrl(), parentid, nodeid);
-            await http.Send<object>(HttpMethod.Put, url);
+            var url = string.Format("{0}/nodes/{1}/children/{2}", await amazon.GetMetadataUrl().ConfigureAwait(false), parentid, nodeid);
+            await http.Send<object>(HttpMethod.Put, url).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -124,8 +124,8 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>Operation Task</returns>
         public async Task Remove(string parentid, string nodeid)
         {
-            var url = string.Format("{0}/nodes/{1}/children/{2}", await amazon.GetMetadataUrl(), parentid, nodeid);
-            await http.Send<object>(HttpMethod.Delete, url);
+            var url = string.Format("{0}/nodes/{1}/children/{2}", await amazon.GetMetadataUrl().ConfigureAwait(false), parentid, nodeid);
+            await http.Send<object>(HttpMethod.Delete, url).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -135,9 +135,9 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>Operation Task</returns>
         public async Task Trash(string id)
         {
-            var url = string.Format("{0}trash/{1}", await amazon.GetMetadataUrl(), id);
+            var url = string.Format("{0}trash/{1}", await amazon.GetMetadataUrl().ConfigureAwait(false), id);
 
-            await http.Send<object>(HttpMethod.Put, url);
+            await http.Send<object>(HttpMethod.Put, url).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -148,9 +148,9 @@ namespace Azi.Amazon.CloudDrive
         /// <returns></returns>
         public async Task<AmazonNode> CreateFolder(string parentId, string name)
         {
-            var url = string.Format("{0}nodes", await amazon.GetMetadataUrl());
+            var url = string.Format("{0}nodes", await amazon.GetMetadataUrl().ConfigureAwait(false));
             var folder = new NewChild { name = name, parents = new string[] { parentId }, kind = "FOLDER" };
-            return await http.Post<NewChild, AmazonNode>(url, folder);
+            return await http.Post<NewChild, AmazonNode>(url, folder).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace Azi.Amazon.CloudDrive
             if (root != null) return root;
 
             var url = "{0}nodes?filters=isRoot:true";
-            var result = await http.GetJsonAsync<Children>(string.Format(url, await amazon.GetMetadataUrl()));
+            var result = await http.GetJsonAsync<Children>(string.Format(url, await amazon.GetMetadataUrl().ConfigureAwait(false))).ConfigureAwait(false);
             if (result.count == 0) return null;
             root = result.data[0];
             if (root == null) throw new InvalidOperationException("Could not retrieve root");
@@ -182,7 +182,7 @@ namespace Azi.Amazon.CloudDrive
             {
                 name = newName
             };
-            return await http.Patch<object, AmazonNode>(string.Format(url, await amazon.GetMetadataUrl(), id), data);
+            return await http.Patch<object, AmazonNode>(string.Format(url, await amazon.GetMetadataUrl().ConfigureAwait(false), id), data).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace Azi.Amazon.CloudDrive
                 fromParent = oldDirId,
                 childId = id
             };
-            return await http.Post<object, AmazonNode>(string.Format(url, await amazon.GetMetadataUrl(), newDirId), data);
+            return await http.Post<object, AmazonNode>(string.Format(url, await amazon.GetMetadataUrl().ConfigureAwait(false), newDirId), data).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -211,8 +211,8 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>Found node info or null</returns>
         public async Task<AmazonNode> GetNodeByMD5(string md5)
         {
-            var url = string.Format("{0}nodes?filters={1}", await amazon.GetMetadataUrl(), MakeMD5Filter(md5));
-            var result = await http.GetJsonAsync<Children>(url);
+            var url = string.Format("{0}nodes?filters={1}", await amazon.GetMetadataUrl().ConfigureAwait(false), MakeMD5Filter(md5));
+            var result = await http.GetJsonAsync<Children>(url).ConfigureAwait(false);
             if (result.count == 0) return null;
             return result.data[0];
         }
