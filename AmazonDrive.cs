@@ -68,7 +68,7 @@ namespace Azi.Amazon.CloudDrive
                 refresh_token = authRenewToken,
                 token_type = "bearer"
             };
-            await UpdateToken();
+            await UpdateToken().ConfigureAwait(false);
             return token != null;
         }
 
@@ -96,15 +96,15 @@ namespace Azi.Amazon.CloudDrive
 
         }
 
-        internal async Task<string> GetContentUrl() => (await Account.GetEndpoint()).contentUrl;
-        internal async Task<string> GetMetadataUrl() => (await Account.GetEndpoint()).metadataUrl;
+        internal async Task<string> GetContentUrl() => (await Account.GetEndpoint().ConfigureAwait(false)).contentUrl;
+        internal async Task<string> GetMetadataUrl() => (await Account.GetEndpoint().ConfigureAwait(false)).metadataUrl;
 
         readonly RequestCachePolicy standartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
 
         private async Task SettingsSetter(HttpWebRequest client)
         {
             if (token != null && !updatingToken)
-                client.Headers.Add("Authorization", "Bearer " + await GetToken());
+                client.Headers.Add("Authorization", "Bearer " + await GetToken().ConfigureAwait(false));
             client.CachePolicy = standartCache;
             client.UserAgent = "AZIACDDokanNet/" + this.GetType().Assembly.ImageRuntimeVersion;
 
@@ -120,7 +120,7 @@ namespace Azi.Amazon.CloudDrive
         private async Task<string> GetToken()
         {
             if (token == null) throw new InvalidOperationException("Not authenticated");
-            if (token.IsExpired) await UpdateToken();
+            if (token.IsExpired) await UpdateToken().ConfigureAwait(false);
             return token?.access_token;
         }
 
@@ -135,7 +135,7 @@ namespace Azi.Amazon.CloudDrive
                         {"client_id",clientId},
                         {"client_secret",clientSecret}
                     };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form);
+            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
             if (token != null)
                 OnTokenUpdate?.Invoke(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
             updatingToken = false;
@@ -225,10 +225,10 @@ namespace Azi.Amazon.CloudDrive
                 {
                     var task = redirectListener.GetContextAsync();
                     var timeoutTask = (cancelToken != null) ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
-                    var anytask = await Task.WhenAny(task, timeoutTask);
+                    var anytask = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
                     if (anytask == task)
                     {
-                        await ProcessRedirect(await task, clientId, clientSecret, redirectUrl);
+                        await ProcessRedirect(await task, clientId, clientSecret, redirectUrl).ConfigureAwait(false);
 
                         this.scope = scope;
                     }
@@ -260,7 +260,7 @@ namespace Azi.Amazon.CloudDrive
 
             var code = HttpUtility.ParseQueryString(context.Request.Url.Query).Get("code");
 
-            await SendRedirectResponse(context.Response);
+            await SendRedirectResponse(context.Response).ConfigureAwait(false);
 
             var form = new Dictionary<string, string>
                                 {
@@ -270,11 +270,11 @@ namespace Azi.Amazon.CloudDrive
                                     {"client_secret",secret},
                                     {"redirect_uri",redirectUrl}
                                 };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form);
+            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
             if (token != null)
                 OnTokenUpdate?.Invoke(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
 
-            await Account.GetEndpoint();
+            await Account.GetEndpoint().ConfigureAwait(false);
         }
 
         readonly byte[] closeTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
@@ -283,7 +283,7 @@ namespace Azi.Amazon.CloudDrive
         {
             response.StatusCode = 200;
             response.ContentLength64 = closeTabResponse.Length;
-            await response.OutputStream.WriteAsync(closeTabResponse, 0, closeTabResponse.Length);
+            await response.OutputStream.WriteAsync(closeTabResponse, 0, closeTabResponse.Length).ConfigureAwait(false);
             response.OutputStream.Close();
         }
 

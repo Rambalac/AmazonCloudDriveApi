@@ -30,7 +30,7 @@ namespace Azi.Tools
         {
             using (var reader = new StreamReader(response.GetResponseStream()))
             {
-                return await reader.ReadToEndAsync();
+                return await reader.ReadToEndAsync().ConfigureAwait(false);
             }
         }
 
@@ -42,7 +42,7 @@ namespace Azi.Tools
         /// <returns>Parsed object</returns>
         public static async Task<T> ReadAsAsync<T>(this HttpWebResponse response)
         {
-            var text = await response.ReadAsStringAsync();
+            var text = await response.ReadAsStringAsync().ConfigureAwait(false);
             return JsonConvert.DeserializeObject<T>(text);
         }
 

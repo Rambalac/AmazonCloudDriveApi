@@ -32,7 +32,7 @@ namespace Azi.Amazon.CloudDrive
         {
             if (_endpoint == null || DateTime.UtcNow - _endpoint.lastCalculated > endpointExpiration)
             {
-                _endpoint = await http.GetJsonAsync<Endpoint>("https://drive.amazonaws.com/drive/v1/account/endpoint");
+                _endpoint = await http.GetJsonAsync<Endpoint>("https://drive.amazonaws.com/drive/v1/account/endpoint").ConfigureAwait(false);
             }
             return _endpoint;
         }
@@ -45,7 +45,8 @@ namespace Azi.Amazon.CloudDrive
         {
             if (_quota == null || DateTime.UtcNow - _quota.lastCalculated > generalExpiration)
             {
-                _quota = await http.GetJsonAsync<Quota>(string.Format("{0}account/quota", await amazon.GetMetadataUrl()));
+                var metadataUrl = await amazon.GetMetadataUrl().ConfigureAwait(false);
+                _quota = await http.GetJsonAsync<Quota>(string.Format("{0}account/quota", metadataUrl)).ConfigureAwait(false);
             }
             return _quota;
         }
@@ -58,7 +59,8 @@ namespace Azi.Amazon.CloudDrive
         {
             if (_usage == null || DateTime.UtcNow - _usage.lastCalculated > generalExpiration)
             {
-                _usage = await http.GetJsonAsync<Usage>(string.Format("{0}account/usage", await amazon.GetMetadataUrl()));
+                var metadataUrl = await amazon.GetMetadataUrl().ConfigureAwait(false);
+                _usage = await http.GetJsonAsync<Usage>(string.Format("{0}account/usage", metadataUrl)).ConfigureAwait(false);
             }
             return _usage;
         }

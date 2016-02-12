@@ -32,7 +32,7 @@ namespace Azi.Tools
 
         public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act)
         {
-            return await Do(times, retryDelay, act, DefaultExceptionProcessor);
+            return await Do(times, retryDelay, act, DefaultExceptionProcessor).ConfigureAwait(false);
         }
 
         public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act, Func<Exception, bool> exceptionPocessor)
@@ -41,15 +41,15 @@ namespace Azi.Tools
             {
                 try
                 {
-                    if (await act()) return true;
+                    if (await act().ConfigureAwait(false)) return true;
                 }
                 catch (Exception ex)
                 {
                     if (exceptionPocessor(ex)) return false;
                 }
-                await Task.Delay(retryDelay(time));
+                await Task.Delay(retryDelay(time)).ConfigureAwait(false);
             }
-            return await act();
+            return await act().ConfigureAwait(false);
         }
 
         public static bool Do(int times, Func<int, TimeSpan> retryDelay, Func<bool> act)
