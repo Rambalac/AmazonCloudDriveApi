@@ -88,7 +88,7 @@ namespace Azi.Amazon.CloudDrive
         }
 
 
-        private static string BuildLoginUrl(string clientId, string redirectUrl, CloudDriveScope scope)
+        public string BuildLoginUrl(string redirectUrl, CloudDriveScope scope)
         {
             Contract.Assert(redirectUrl != null);
 
@@ -219,7 +219,7 @@ namespace Azi.Amazon.CloudDrive
             CreateListener(portSelector);
 
             redirectListener.Start();
-            using (var tabProcess = Process.Start(BuildLoginUrl(clientId, redirectUrl, scope)))
+            using (var tabProcess = Process.Start(BuildLoginUrl(redirectUrl, scope)))
             {
                 try
                 {
