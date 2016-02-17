@@ -10,31 +10,31 @@ namespace Azi.Amazon.CloudDrive.Tests
 {
     public class AmazonFilesTests
     {
-        [Fact()]
+        [Fact]
         public void OverwriteTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void UploadNewTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void DownloadTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void DownloadTest1()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void DownloadTest2()
         {
             Assert.True(false, "This test needs an implementation");
