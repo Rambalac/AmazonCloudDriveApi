@@ -10,67 +10,67 @@ namespace Azi.Amazon.CloudDrive.Tests
 {
     public class AmazonNodesTests
     {
-        [Fact()]
+        [Fact]
         public void GetNodeTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void GetChildrenTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void GetChildTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void AddTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void RemoveTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void TrashTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void CreateFolderTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void GetRootTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void RenameTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void MoveTest()
         {
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact()]
+        [Fact]
         public void GetNodeByMD5Test()
         {
             Assert.True(false, "This test needs an implementation");
