@@ -87,12 +87,7 @@ namespace Azi.Amazon.CloudDrive
             Files = new AmazonFiles(this);
         }
 
-        /// <summary>
-        /// Creates URL for 
-        /// </summary>
-        /// <param name="redirectUrl"></param>
-        /// <param name="scope"></param>
-        /// <returns></returns>
+
         public string BuildLoginUrl(string redirectUrl, CloudDriveScope scope)
         {
             Contract.Assert(redirectUrl != null);
@@ -142,7 +137,7 @@ namespace Azi.Amazon.CloudDrive
                     };
             token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
             if (token != null)
-                CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+                OnTokenUpdate?.Invoke(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
             updatingToken = false;
         }
 
@@ -277,17 +272,9 @@ namespace Azi.Amazon.CloudDrive
                                 };
             token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
             if (token != null)
-            {
-                CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
-            }
+                OnTokenUpdate?.Invoke(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
 
             await Account.GetEndpoint().ConfigureAwait(false);
-        }
-
-        private void CallOnTokenUpdate(string access_token, string refresh_token, DateTime expires_in)
-        {
-            Action<string, string, DateTime> action;
-            if (weakOnTokenUpdate != null && weakOnTokenUpdate.TryGetTarget(out action)) action?.Invoke(access_token, refresh_token, expires_in);
         }
 
         readonly byte[] closeTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
@@ -310,18 +297,10 @@ namespace Azi.Amazon.CloudDrive
             {CloudDriveScope.Write,"clouddrive:write" }
         };
 
-        private WeakReference<Action<string, string, DateTime>> weakOnTokenUpdate = null;
-
         /// <summary>
         /// Callback called when auth token get updated on authentication or renewal.
         /// </summary>
-        public Action<string, string, DateTime> OnTokenUpdate
-        {
-            set
-            {
-                weakOnTokenUpdate = new WeakReference<Action<string, string, DateTime>>(value);
-            }
-        }
+        public Action<string, string, DateTime> OnTokenUpdate { get; set; }
 
         private static string ScopeToString(CloudDriveScope scope)
         {
