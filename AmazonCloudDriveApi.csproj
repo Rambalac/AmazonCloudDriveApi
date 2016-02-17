@@ -60,6 +60,7 @@
     <Compile Include="HttpClient.cs" />
     <Compile Include="HttpWebException.cs" />
     <Compile Include="HttpWebRequestExtensions.cs" />
+    <Compile Include="ITokenUpdateListener.cs" />
     <Compile Include="JsonObjects\AmazonNode.cs" />
     <Compile Include="JsonObjects\AuthToken.cs" />
     <Compile Include="JsonObjects\Children.cs" />

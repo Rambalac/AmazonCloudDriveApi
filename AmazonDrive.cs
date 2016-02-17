@@ -286,8 +286,8 @@ namespace Azi.Amazon.CloudDrive
 
         private void CallOnTokenUpdate(string access_token, string refresh_token, DateTime expires_in)
         {
-            Action<string, string, DateTime> action;
-            if (weakOnTokenUpdate != null && weakOnTokenUpdate.TryGetTarget(out action)) action?.Invoke(access_token, refresh_token, expires_in);
+            ITokenUpdateListener action;
+            if (weakOnTokenUpdate != null && weakOnTokenUpdate.TryGetTarget(out action)) action?.OnTokenUpdated(access_token, refresh_token, expires_in);
         }
 
         readonly byte[] closeTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
@@ -310,16 +310,16 @@ namespace Azi.Amazon.CloudDrive
             {CloudDriveScope.Write,"clouddrive:write" }
         };
 
-        private WeakReference<Action<string, string, DateTime>> weakOnTokenUpdate = null;
+        private WeakReference<ITokenUpdateListener> weakOnTokenUpdate = null;
 
         /// <summary>
-        /// Callback called when auth token get updated on authentication or renewal.
+        /// Callback called when auth token get updated on authentication or renewal. Using WeakReference
         /// </summary>
-        public Action<string, string, DateTime> OnTokenUpdate
+        public ITokenUpdateListener OnTokenUpdate
         {
             set
             {
-                weakOnTokenUpdate = new WeakReference<Action<string, string, DateTime>>(value);
+                weakOnTokenUpdate = new WeakReference<ITokenUpdateListener>(value);
             }
         }
 
