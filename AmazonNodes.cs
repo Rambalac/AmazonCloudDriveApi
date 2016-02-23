@@ -40,6 +40,18 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <summary>
+        /// Requests for node extended information by its Id. Extended info includes temp link and assets.
+        /// </summary>
+        /// <param name="id">Node id</param>
+        /// <returns>Node info or null</returns>
+        public async Task<AmazonNode> GetNodeExtended(string id)
+        {
+            var url = "{0}nodes/{1}?asset=ALL&tempLink=true";
+            var result = await http.GetJsonAsync<AmazonNode>(string.Format(url, await amazon.GetMetadataUrl().ConfigureAwait(false), id)).ConfigureAwait(false);
+            return result;
+        }
+
+        /// <summary>
         /// Requests for all nodes info belonging to specified parent
         /// </summary>
         /// <param name="id">Parent node id. If null Root folder is presumed</param>

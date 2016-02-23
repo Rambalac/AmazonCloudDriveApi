@@ -104,5 +104,9 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public ContentProperties contentProperties { get; set; }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+        public string tempLink { get; set; }
+
+        public IList<AmazonNode> assets { get; set; }
     }
 }
