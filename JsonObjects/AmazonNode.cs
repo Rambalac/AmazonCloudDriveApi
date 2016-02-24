@@ -39,6 +39,18 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 
+    public class AmazonNodeVideo
+    {
+        public int height { get; set; }
+        public int width { get; set; }
+    }
+
+    public class AmazonNodeImage
+    {
+        public int height { get; set; }
+        public int width { get; set; }
+    }
+
     /// <summary>
     /// Cloud drive node information. See REST API
     /// </summary>
@@ -108,5 +120,8 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
         public string tempLink { get; set; }
 
         public IList<AmazonNode> assets { get; set; }
+
+        public AmazonNodeVideo video { get; set; }
+        public AmazonNodeImage image { get; set; }
     }
 }
