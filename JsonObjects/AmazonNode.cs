@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
     /// <summary>
@@ -8,17 +9,9 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
     /// </summary>
     public enum AmazonNodeStatus
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         AVAILABLE,
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         TRASH,
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         PURGED
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 
     /// <summary>
@@ -26,28 +19,40 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
     /// </summary>
     public enum AmazonNodeKind
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         FILE,
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         ASSET,
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         FOLDER
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 
+    /// <summary>
+    /// Video properties
+    /// </summary>
     public class AmazonNodeVideo
     {
+        /// <summary>
+        /// Video height
+        /// </summary>
         public int height { get; set; }
+
+    /// <summary>
+        /// Video width
+        /// </summary>
         public int width { get; set; }
     }
 
+    /// <summary>
+    /// Image properties
+    /// </summary>
     public class AmazonNodeImage
     {
+        /// <summary>
+        /// Image height
+        /// </summary>
         public int height { get; set; }
+
+    /// <summary>
+        /// Image width
+        /// </summary>
         public int width { get; set; }
     }
 
@@ -60,68 +65,27 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
         /// File size, 0 for folders.
         /// </summary>
         public long Length => contentProperties?.size ?? 0;
-
         /// <summary>
         /// Creation time
         /// </summary>
         public readonly DateTime FetchTime = DateTime.UtcNow;
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string eTagResponse { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string id { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string name { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public AmazonNodeKind kind { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public int version { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public DateTime modifiedDate { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public DateTime createdDate { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public IList<string> labels { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string createdBy { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public IList<string> parents { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public AmazonNodeStatus status { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public bool restricted { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public ContentProperties contentProperties { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-
         public string tempLink { get; set; }
-
         public IList<AmazonNode> assets { get; set; }
-
         public AmazonNodeVideo video { get; set; }
         public AmazonNodeImage image { get; set; }
     }
 }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
