@@ -25,6 +25,11 @@ namespace Azi.Tools
             return false;
         }
 
+        static Task<bool> DefaultExceptionProcessorAsync(Exception ex)
+        {
+            throw ex;
+        }
+
         static bool DefaultExceptionProcessor(Exception ex)
         {
             throw ex;
@@ -32,10 +37,10 @@ namespace Azi.Tools
 
         public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act)
         {
-            return await Do(times, retryDelay, act, DefaultExceptionProcessor).ConfigureAwait(false);
+            return await Do(times, retryDelay, act, DefaultExceptionProcessorAsync).ConfigureAwait(false);
         }
 
-        public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act, Func<Exception, bool> exceptionPocessor)
+        public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act, Func<Exception, Task<bool>> exceptionPocessor)
         {
             for (int time = 0; time < times - 1; time++)
             {
@@ -45,7 +50,7 @@ namespace Azi.Tools
                 }
                 catch (Exception ex)
                 {
-                    if (exceptionPocessor(ex)) return false;
+                    if (await exceptionPocessor(ex)) return false;
                 }
                 await Task.Delay(retryDelay(time)).ConfigureAwait(false);
             }

@@ -29,7 +29,7 @@ namespace Azi.Amazon.CloudDrive
         private CloudDriveScope scope;
         private AuthToken token;
 
-        internal readonly Tools.HttpClient http;
+        internal readonly HttpClient http;
 
         /// <summary>
         /// Account related part of API
@@ -82,9 +82,16 @@ namespace Azi.Amazon.CloudDrive
             this.clientSecret = clientSecret;
             this.clientId = clientId;
             http = new Tools.HttpClient(SettingsSetter);
+            http.AddRetryErrorProcessor(HttpStatusCode.Unauthorized, ProcessUnauthorized);
             Account = new AmazonAccount(this);
             Nodes = new AmazonNodes(this);
             Files = new AmazonFiles(this);
+        }
+
+        private async Task<bool> ProcessUnauthorized(HttpStatusCode arg)
+        {
+            await UpdateToken();
+            return true;
         }
 
         /// <summary>

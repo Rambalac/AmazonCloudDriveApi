@@ -56,14 +56,25 @@ namespace Azi.Tools
             return null;
         }
 
-        static readonly HashSet<HttpStatusCode> retryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
+        private static readonly HashSet<HttpStatusCode> retryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
+        private readonly Dictionary<HttpStatusCode, WeakReference<Func<HttpStatusCode, Task<bool>>>> RetryErrorProcessor = new Dictionary<HttpStatusCode, WeakReference<Func<HttpStatusCode, Task<bool>>>>();
+
+        public void AddRetryErrorProcessor(HttpStatusCode code, Func<HttpStatusCode, Task<bool>> func)
+        {
+            RetryErrorProcessor[code] = new WeakReference<Func<HttpStatusCode, Task<bool>>>(func);
+        }
+
+        public void RemoveRetryErrorProcessor(HttpStatusCode code)
+        {
+            RetryErrorProcessor.Remove(code);
+        }
 
         /// <summary>
         /// Return false to continue
         /// </summary>
         /// <param name="ex"></param>
         /// <returns></returns>
-        static bool GeneralExceptionProcessor(Exception ex)
+        async Task<bool> GeneralExceptionProcessor(Exception ex)
         {
             if (ex is TaskCanceledException) return false;
 
@@ -75,6 +86,16 @@ namespace Azi.Tools
                 if (webresp != null)
                 {
                     if (retryCodes.Contains(webresp.StatusCode)) return false;
+
+                    WeakReference<Func<HttpStatusCode, Task<bool>>> weakfunc;
+                    Func<HttpStatusCode, Task<bool>> func;
+                    if (RetryErrorProcessor.TryGetValue(webresp.StatusCode, out weakfunc))
+                        if (weakfunc.TryGetTarget(out func))
+                        {
+                            if (func != null)
+                                if (await func(webresp.StatusCode)) return false;
+                        }
+
                     throw new HttpWebException(webex.Message, webresp.StatusCode);
                 }
             }
