@@ -34,6 +34,11 @@ namespace Azi.Amazon.CloudDrive
         IAmazonNodes Nodes { get; }
 
         /// <summary>
+        /// Gets or sets byte array with response for redirection from authentication page
+        /// </summary>
+        byte[] CloseTabResponse { get; set; }
+
+        /// <summary>
         /// Sets callback called when authentication token get updated on authentication or renewal. Using WeakReference
         /// </summary>
         ITokenUpdateListener OnTokenUpdate { set; }
@@ -61,11 +66,12 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="scope">Your Application scope to access cloud</param>
         /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
         /// <param name="cancelToken">Cancellation for authentication. Can be null.</param>
+        /// <param name="redirectUrl">URL to redirect to after authentication. Use {0} for port substitute. Must be registered in Amazon Developers Console.</param>
         /// <param name="portSelector">Func to select port for redirect listener.
         /// portSelector(int lastPort, int time) where lastPost is port used last time and
         /// time is number of times selector was called before. To abort port selection throw exception other than HttpListenerException</param>
         /// <returns>True if authenticated</returns>
         /// <exception cref="InvalidOperationException">if any selected port could not be opened by default selector</exception>
-        Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = default(CancellationToken?), Func<int, int, int> portSelector = null);
+        Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = default(CancellationToken?), string redirectUrl = null, Func<int, int, int> portSelector = null);
     }
 }

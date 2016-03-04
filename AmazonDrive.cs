@@ -39,7 +39,7 @@ namespace Azi.Amazon.CloudDrive
             { CloudDriveScope.Write, "clouddrive:write" }
         };
 
-        private readonly byte[] closeTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
+        private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
 
         private readonly HttpClient http;
 
@@ -49,9 +49,7 @@ namespace Azi.Amazon.CloudDrive
         private string clientSecret;
 
         private HttpListener redirectListener;
-        private string redirectUrl;
 
-        private CloudDriveScope scope;
         private AuthToken token;
 
         private bool updatingToken = false;
@@ -72,13 +70,13 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
+        public int ListenerPortStart { get; set; } = 45674;
+
+        /// <inheritdoc/>
         public IAmazonAccount Account => this;
 
         /// <inheritdoc/>
         public IAmazonFiles Files => this;
-
-        /// <inheritdoc/>
-        public int ListenerPortStart { get; set; } = 45674;
 
         /// <inheritdoc/>
         public IAmazonNodes Nodes => this;
@@ -91,6 +89,9 @@ namespace Azi.Amazon.CloudDrive
                 weakOnTokenUpdate = new WeakReference<ITokenUpdateListener>(value);
             }
         }
+
+        /// <inheritdoc/>
+        public byte[] CloseTabResponse { get; set; } = DefaultCloseTabResponse;
 
         /// <inheritdoc/>
         public async Task<bool> Authentication(string authToken, string authRenewToken, DateTime authTokenExpiration)
@@ -116,9 +117,9 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = null, Func<int, int, int> portSelector = null)
+        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = null, string unformatedRedirectUrl = null, Func<int, int, int> portSelector = null)
         {
-            CreateListener(portSelector);
+            string redirectUrl = CreateListener(unformatedRedirectUrl, portSelector);
 
             redirectListener.Start();
             using (var tabProcess = Process.Start(BuildLoginUrl(redirectUrl, scope)))
@@ -131,8 +132,6 @@ namespace Azi.Amazon.CloudDrive
                     if (anytask == task)
                     {
                         await ProcessRedirect(await task, clientId, clientSecret, redirectUrl).ConfigureAwait(false);
-
-                        this.scope = scope;
                     }
                     else
                     {
@@ -178,7 +177,7 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        private void CreateListener(Func<int, int, int> portSelector = null)
+        private string CreateListener(string redirectUrl = "http://localhost:{0}/signin/", Func<int, int, int> portSelector = null)
         {
             if (redirectListener != null)
             {
@@ -193,10 +192,9 @@ namespace Azi.Amazon.CloudDrive
                 try
                 {
                     port = (portSelector ?? DefaultPortSelector).Invoke(port, time++);
-                    redirectUrl = $"http://localhost:{port}/signin/";
                     listener.Prefixes.Add(redirectUrl);
                     redirectListener = listener;
-                    return;
+                    return string.Format(redirectUrl, port);
                 }
                 catch (HttpListenerException)
                 {
@@ -304,8 +302,8 @@ namespace Azi.Amazon.CloudDrive
         private async Task SendRedirectResponse(HttpListenerResponse response)
         {
             response.StatusCode = 200;
-            response.ContentLength64 = closeTabResponse.Length;
-            await response.OutputStream.WriteAsync(closeTabResponse, 0, closeTabResponse.Length).ConfigureAwait(false);
+            response.ContentLength64 = CloseTabResponse.Length;
+            await response.OutputStream.WriteAsync(CloseTabResponse, 0, CloseTabResponse.Length).ConfigureAwait(false);
             response.OutputStream.Close();
         }
 

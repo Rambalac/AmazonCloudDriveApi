@@ -19,7 +19,7 @@
   <Import Project="$(NuProjPath)\NuProj.props" Condition="Exists('$(NuProjPath)\NuProj.props')" />
   <PropertyGroup Label="Configuration">
     <Id>AmazonCloudDriveApi</Id>
-    <Version>2.0.0</Version>
+    <Version>1.1.0</Version>
     <Title>Amazon Cloud Drive API</Title>
     <Authors>Rambalac</Authors>
     <Owners>Rambalac</Owners>
