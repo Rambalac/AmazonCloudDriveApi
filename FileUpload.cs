@@ -1,15 +1,10 @@
-﻿using Newtonsoft.Json;
+// <copyright file="FileUpload.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Runtime.Serialization;
 
 namespace Azi.Tools
 {
@@ -19,14 +14,28 @@ namespace Azi.Tools
     internal class FileUpload
     {
         /// <summary>
-        /// Returns Stream with content to upload. Can be requested multiple time in case of retry.
+        /// Gets or sets file name
         /// </summary>
-        public Func<Stream> StreamOpener;
+        public string FileName { get; set; }
 
-        public Dictionary<string, string> Parameters;
-        public string FormName;
-        public string FileName;
+        /// <summary>
+        /// Gets or sets form name
+        /// </summary>
+        public string FormName { get; set; }
 
-        public int Timeout = 30000;
+        /// <summary>
+        /// Gets or sets multipart parameters
+        /// </summary>
+        public Dictionary<string, string> Parameters { get; set; }
+
+        /// <summary>
+        /// Gets or sets Stream creator func with content to upload. Can be requested multiple time in case of retry.
+        /// </summary>
+        public Func<Stream> StreamOpener { get; set; }
+
+        /// <summary>
+        /// Gets or sets upload timeout
+        /// </summary>
+        public int Timeout { get; set; } = 30000;
     }
 }

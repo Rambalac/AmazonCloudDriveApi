@@ -1,38 +1,31 @@
-﻿using System;
+﻿// <copyright file="ContentProperties.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
+using System;
+
+#pragma warning disable SA1600 // Elements must be documented
+#pragma warning disable SA1300 // Element must begin with upper-case letter
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class ContentProperties
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public long size { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public int version { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string contentType { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string md5 { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string extension { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public DateTime contentDate { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public Image image { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }
+#pragma warning restore SA1600 // Elements must be documented
+#pragma warning restore SA1300 // Element must begin with upper-case letter
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

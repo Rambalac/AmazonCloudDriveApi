@@ -1,23 +1,24 @@
-﻿// <copyright file="Quota.cs" company="PlaceholderCompany">
+﻿// <copyright file="NewChild.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-using System;
-
+#pragma warning disable SA1307 // Accessible fields must begin with upper-case letter
 #pragma warning disable SA1600 // Elements must be documented
 #pragma warning disable SA1300 // Element must begin with upper-case letter
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-    public class Quota
+    public class NewChild
     {
-        public long quota { get; set; }
+        public string name { get; set; }
 
-        public DateTime lastCalculated { get; set; }
+        public string kind { get; set; }
 
-        public long available { get; set; }
+        public string[] parents { get; set; }
     }
 }
 #pragma warning restore SA1600 // Elements must be documented
 #pragma warning restore SA1300 // Element must begin with upper-case letter
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore SA1307 // Accessible fields must begin with upper-case letter
+

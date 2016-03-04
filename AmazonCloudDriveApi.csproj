@@ -41,7 +41,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.8.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -57,18 +57,27 @@
     <Compile Include="CloudDriveScope.cs" />
     <Compile Include="AmazonDrive.cs" />
     <Compile Include="FileUpload.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="HttpClient.cs" />
     <Compile Include="HttpWebException.cs" />
     <Compile Include="HttpWebRequestExtensions.cs" />
+    <Compile Include="IAmazonAccount.cs" />
+    <Compile Include="IAmazonDrive.cs" />
+    <Compile Include="IAmazonFiles.cs" />
+    <Compile Include="IAmazonNodes.cs" />
     <Compile Include="ITokenUpdateListener.cs" />
     <Compile Include="JsonObjects\AmazonNode.cs" />
+    <Compile Include="JsonObjects\AmazonNodeImage.cs" />
+    <Compile Include="JsonObjects\AmazonNodeVideo.cs" />
+    <Compile Include="JsonObjects\Amount.cs" />
     <Compile Include="JsonObjects\AuthToken.cs" />
     <Compile Include="JsonObjects\Children.cs" />
     <Compile Include="JsonObjects\ContentProperties.cs" />
     <Compile Include="JsonObjects\Image.cs" />
     <Compile Include="JsonObjects\Endpoint.cs" />
-    <Compile Include="JsonObjects\NewFile.cs" />
+    <Compile Include="JsonObjects\NewChild.cs" />
     <Compile Include="JsonObjects\Quota.cs" />
+    <Compile Include="JsonObjects\TotalAndBillable.cs" />
     <Compile Include="JsonObjects\Usage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Retry.cs" />
@@ -76,6 +85,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="stylecop.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
+    <Analyzer Include="packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

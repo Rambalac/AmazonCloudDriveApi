@@ -1,24 +1,24 @@
-// <copyright file="AmazonAccount.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Azi.Amazon.CloudDrive.JsonObjects;
 
 namespace Azi.Amazon.CloudDrive
 {
     /// <summary>
-    /// Part to work with account info
+    /// Account related part of API
     /// </summary>
     public partial class AmazonDrive
     {
-        private static readonly TimeSpan EndpointExpiration = TimeSpan.FromDays(3);
         private Endpoint endpoint;
         private Quota quota;
         private Usage usage;
 
-        /// <inheritdoc/>
+        private static readonly TimeSpan EndpointExpiration = TimeSpan.FromDays(3);
+
+        /// <summary>
+        /// Request for API endpoints. Cached in memory for 3 days.
+        /// </summary>
+        /// <returns>Endpoint info</returns>
         async Task<Endpoint> IAmazonAccount.GetEndpoint()
         {
             if (endpoint == null || DateTime.UtcNow - endpoint.lastCalculated > EndpointExpiration)
@@ -29,7 +29,10 @@ namespace Azi.Amazon.CloudDrive
             return endpoint;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Request for drive quota info.
+        /// </summary>
+        /// <returns>Quota info</returns>
         async Task<Quota> IAmazonAccount.GetQuota()
         {
             if (quota == null || DateTime.UtcNow - quota.lastCalculated > GeneralExpiration)
@@ -41,7 +44,10 @@ namespace Azi.Amazon.CloudDrive
             return quota;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Request for drive usage info.
+        /// </summary>
+        /// <returns>Usage info</returns>
         async Task<Usage> IAmazonAccount.GetUsage()
         {
             if (usage == null || DateTime.UtcNow - usage.lastCalculated > GeneralExpiration)

@@ -1,9 +1,9 @@
-﻿using Xunit;
-using Azi.Amazon.CloudDrive;
+﻿// <copyright file="AmazonNodesTests.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using Xunit;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Azi.Amazon.CloudDrive.Tests
@@ -36,7 +36,6 @@ namespace Azi.Amazon.CloudDrive.Tests
         }
 
         protected const string Testdir = "\\ACDDokanNetTest\\";
-
 
         [Fact]
         public void GetNodeTest()

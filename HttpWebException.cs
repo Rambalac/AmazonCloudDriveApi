@@ -1,35 +1,53 @@
-﻿using Newtonsoft.Json;
+// <copyright file="HttpWebException.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Runtime.Serialization;
 
 namespace Azi.Tools
 {
     /// <summary>
-    /// Http error with Status Code
+    /// Exception with HTTP status code
     /// </summary>
     [Serializable]
     public class HttpWebException : Exception
     {
         /// <summary>
-        /// Http Status Code
+        /// Initializes a new instance of the <see cref="HttpWebException"/> class.
+        /// Creates exception with message and HTTP status code
         /// </summary>
-        public readonly HttpStatusCode StatusCode;
-        internal HttpWebException(string message, HttpStatusCode code) : base(message)
+        /// <param name="message">Message</param>
+        /// <param name="code">Status code</param>
+        public HttpWebException(string message, HttpStatusCode code)
+            : base(message)
         {
             this.StatusCode = code;
         }
-        internal HttpWebException(string message, HttpStatusCode code, Exception e) : base(message, e)
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpWebException"/> class.
+        /// Creates exception with message, HTTP status code and inner exception
+        /// </summary>
+        /// <param name="message">Message</param>
+        /// <param name="code">Status code</param>
+        /// <param name="e">Inner exception</param>
+        public HttpWebException(string message, HttpStatusCode code, Exception e)
+            : base(message, e)
         {
             this.StatusCode = code;
+        }
+
+        /// <summary>
+        /// Gets HTTP Status Code
+        /// </summary>
+        public HttpStatusCode StatusCode { get; }
+
+        /// <inheritdoc/>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
         }
     }
 }

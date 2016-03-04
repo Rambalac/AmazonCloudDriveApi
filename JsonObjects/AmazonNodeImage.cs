@@ -1,21 +1,26 @@
-﻿// <copyright file="Quota.cs" company="PlaceholderCompany">
+﻿// <copyright file="AmazonNodeImage.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
-
-using System;
 
 #pragma warning disable SA1600 // Elements must be documented
 #pragma warning disable SA1300 // Element must begin with upper-case letter
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-    public class Quota
+    /// <summary>
+    /// Image properties
+    /// </summary>
+    public class AmazonNodeImage
     {
-        public long quota { get; set; }
+        /// <summary>
+        /// Gets or sets image height
+        /// </summary>
+        public int height { get; set; }
 
-        public DateTime lastCalculated { get; set; }
-
-        public long available { get; set; }
+    /// <summary>
+        /// Gets or sets image width
+        /// </summary>
+        public int width { get; set; }
     }
 }
 #pragma warning restore SA1600 // Elements must be documented

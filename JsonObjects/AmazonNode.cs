@@ -1,6 +1,12 @@
-﻿using System;
+﻿// <copyright file="AmazonNode.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System;
 using System.Collections.Generic;
 
+#pragma warning disable SA1600 // Elements must be documented
+#pragma warning disable SA1300 // Element must begin with upper-case letter
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
@@ -9,8 +15,19 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
     /// </summary>
     public enum AmazonNodeStatus
     {
+        /// <summary>
+        /// Amazon node AVAILABLE
+        /// </summary>
         AVAILABLE,
+
+        /// <summary>
+        /// Amazon node TRASHed
+        /// </summary>
         TRASH,
+
+        /// <summary>
+        /// Amazon node PURGED
+        /// </summary>
         PURGED
     }
 
@@ -19,41 +36,20 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
     /// </summary>
     public enum AmazonNodeKind
     {
+        /// <summary>
+        /// File node
+        /// </summary>
         FILE,
+
+        /// <summary>
+        /// Asset node
+        /// </summary>
         ASSET,
+
+        /// <summary>
+        /// Folder node
+        /// </summary>
         FOLDER
-    }
-
-    /// <summary>
-    /// Video properties
-    /// </summary>
-    public class AmazonNodeVideo
-    {
-        /// <summary>
-        /// Video height
-        /// </summary>
-        public int height { get; set; }
-
-    /// <summary>
-        /// Video width
-        /// </summary>
-        public int width { get; set; }
-    }
-
-    /// <summary>
-    /// Image properties
-    /// </summary>
-    public class AmazonNodeImage
-    {
-        /// <summary>
-        /// Image height
-        /// </summary>
-        public int height { get; set; }
-
-    /// <summary>
-        /// Image width
-        /// </summary>
-        public int width { get; set; }
     }
 
     /// <summary>
@@ -62,30 +58,50 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
     public class AmazonNode
     {
         /// <summary>
-        /// File size, 0 for folders.
+        /// Gets creation time
+        /// </summary>
+        public DateTime FetchTime { get; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Gets file size, 0 for folders.
         /// </summary>
         public long Length => contentProperties?.size ?? 0;
-        /// <summary>
-        /// Creation time
-        /// </summary>
-        public readonly DateTime FetchTime = DateTime.UtcNow;
+
         public string eTagResponse { get; set; }
+
         public string id { get; set; }
+
         public string name { get; set; }
+
         public AmazonNodeKind kind { get; set; }
+
         public int version { get; set; }
+
         public DateTime modifiedDate { get; set; }
+
         public DateTime createdDate { get; set; }
+
         public IList<string> labels { get; set; }
+
         public string createdBy { get; set; }
+
         public IList<string> parents { get; set; }
+
         public AmazonNodeStatus status { get; set; }
+
         public bool restricted { get; set; }
+
         public ContentProperties contentProperties { get; set; }
+
         public string tempLink { get; set; }
+
         public IList<AmazonNode> assets { get; set; }
+
         public AmazonNodeVideo video { get; set; }
+
         public AmazonNodeImage image { get; set; }
     }
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore SA1300 // Element must begin with upper-case letter
+#pragma warning restore SA1600 // Elements must be documented

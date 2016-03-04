@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+// <copyright file="ITokenUpdateListener.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+using System;
 
 namespace Azi.Amazon.CloudDrive
 {
@@ -14,9 +14,9 @@ namespace Azi.Amazon.CloudDrive
         /// <summary>
         /// Called when Authentication Token updated
         /// </summary>
-        /// <param name="access_token"></param>
-        /// <param name="refresh_token"></param>
-        /// <param name="expires_in"></param>
+        /// <param name="access_token">Authentication token</param>
+        /// <param name="refresh_token">Authentication token refresh token</param>
+        /// <param name="expires_in">Authentication token expiration time</param>
         void OnTokenUpdated(string access_token, string refresh_token, DateTime expires_in);
     }
 }

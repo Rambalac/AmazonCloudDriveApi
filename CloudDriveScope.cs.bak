@@ -1,8 +1,4 @@
-// <copyright file="CloudDriveScope.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-using System;
+﻿using System;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive

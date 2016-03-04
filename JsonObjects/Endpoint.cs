@@ -1,25 +1,26 @@
-﻿using System;
+﻿// <copyright file="Endpoint.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
+using System;
+
+#pragma warning disable SA1600 // Elements must be documented
+#pragma warning disable SA1300 // Element must begin with upper-case letter
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class Endpoint
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        public readonly DateTime lastCalculated = DateTime.UtcNow;
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+        public DateTime lastCalculated { get; } = DateTime.UtcNow;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public bool customerExists { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string contentUrl { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
         public string metadataUrl { get; set; }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }
+#pragma warning restore SA1600 // Elements must be documented
+#pragma warning restore SA1300 // Element must begin with upper-case letter
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
