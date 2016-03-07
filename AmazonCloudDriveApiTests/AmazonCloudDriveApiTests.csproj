@@ -78,13 +78,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AmazonCloudDriveApi.csproj">
-      <Project>{6B9BD9BA-3B77-4F1A-B132-45E68D9951EE}</Project>
-      <Name>AmazonCloudDriveApi</Name>
-    </ProjectReference>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+    <ProjectReference Include="..\AmazonCloudDriveApi\AmazonCloudDriveApi.csproj">
+      <Project>{2c611335-3d92-492f-b3eb-2cf3955f63a1}</Project>
+      <Name>AmazonCloudDriveApi</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

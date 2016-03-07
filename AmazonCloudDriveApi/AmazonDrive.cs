@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using System.Web;
 using Azi.Amazon.CloudDrive.JsonObjects;
 using Azi.Tools;
-using Microsoft.Win32;
 
 namespace Azi.Amazon.CloudDrive
 {
@@ -240,27 +239,6 @@ namespace Azi.Amazon.CloudDrive
             }
 
             return token?.access_token;
-        }
-
-        private Process OpenUrlInDefaultBrowser(string url)
-        {
-            using (var nameKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice", false))
-            {
-                var appName = nameKey.GetValue("Progid") as string;
-                using (var commandKey = Registry.ClassesRoot.OpenSubKey($@"{appName}\shell\open\command", false))
-                {
-                    var str = commandKey.GetValue(null) as string;
-                    var m = BrowserPathPattern.Match(str);
-                    if (!m.Success || !m.Groups["path"].Success)
-                    {
-                        throw new InvalidOperationException("Can not find default browser path");
-                    }
-
-                    var path = m.Groups["path"].Value;
-                    var args = m.Groups["args"].Value.Replace("%1", url);
-                    return Process.Start(path, args);
-                }
-            }
         }
 
         private async Task ProcessRedirect(HttpListenerContext context, string clientId, string secret, string redirectUrl)

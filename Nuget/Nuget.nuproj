@@ -10,8 +10,11 @@
       <Platform>AnyCPU</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AmazonCloudDriveApi\AmazonCloudDriveApi.csproj" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>5ec86b58-734e-45c7-8ac9-3c402c2c23c1</ProjectGuid>
+    <ProjectGuid>4be510d3-9a20-4fee-b11e-0218ffa6a11e</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup>
     <NuProjPath Condition=" '$(NuProjPath)' == '' ">$(MSBuildExtensionsPath)\NuProj\</NuProjPath>
@@ -31,8 +34,5 @@
     <Copyright>Copyright © Rambalac</Copyright>
     <Tags>Amazon CloudDrive REST Cloud</Tags>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AmazonCloudDriveApi\AmazonCloudDriveApi.csproj" />
-  </ItemGroup>
   <Import Project="$(NuProjPath)\NuProj.targets" />
 </Project>
