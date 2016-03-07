@@ -22,7 +22,7 @@ namespace Azi.Amazon.CloudDrive
     /// <summary>
     /// Root class for Amazon Cloud Drive API
     /// </summary>
-    public partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive
+    public sealed partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive
     {
         private const string LoginUrlBase = "https://www.amazon.com/ap/oa";
 
