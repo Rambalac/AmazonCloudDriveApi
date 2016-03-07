@@ -1,5 +1,5 @@
-﻿// <copyright file="Children.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="Children.cs" company="Rambalac">
+// Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
 using System.Collections.Generic;

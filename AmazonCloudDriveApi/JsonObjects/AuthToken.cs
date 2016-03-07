@@ -1,5 +1,5 @@
-﻿// <copyright file="AuthToken.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="AuthToken.cs" company="Rambalac">
+// Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
 using System;

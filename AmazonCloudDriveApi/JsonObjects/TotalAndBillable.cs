@@ -1,5 +1,5 @@
-﻿// <copyright file="TotalAndBillable.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="TotalAndBillable.cs" company="Rambalac">
+// Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
 #pragma warning disable SA1600 // Elements must be documented

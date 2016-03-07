@@ -9,7 +9,7 @@
     <ProjectGuid>{C6768550-6571-4ADE-8328-6A491770B455}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AmazonCloudDriveApiTests</RootNamespace>
+    <RootNamespace>Azi.Amazon.CloudDrive.Tests</RootNamespace>
     <AssemblyName>AmazonCloudDriveApiTests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

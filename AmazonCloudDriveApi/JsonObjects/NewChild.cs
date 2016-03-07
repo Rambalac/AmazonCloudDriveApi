@@ -1,5 +1,5 @@
-﻿// <copyright file="NewChild.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="NewChild.cs" company="Rambalac">
+// Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
 #pragma warning disable SA1307 // Accessible fields must begin with upper-case letter
