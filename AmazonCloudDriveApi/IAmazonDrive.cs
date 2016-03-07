@@ -53,7 +53,7 @@ namespace Azi.Amazon.CloudDrive
         Task<bool> Authentication(string authToken, string authRenewToken, DateTime authTokenExpiration);
 
         /// <summary>
-        /// Creates URL for
+        /// Constructs URL for authentication
         /// </summary>
         /// <param name="redirectUrl">URL to redirect to after authentication. Must be registered in Amazon Developers Console.</param>
         /// <param name="scope">Access scope. Must be subset of application registered scopes in Amazon Developers Console.</param>
@@ -66,7 +66,7 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="scope">Your Application scope to access cloud</param>
         /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
         /// <param name="cancelToken">Cancellation for authentication. Can be null.</param>
-        /// <param name="redirectUrl">URL to redirect to after authentication. Use {0} for port substitute. Must be registered in Amazon Developers Console.</param>
+        /// <param name="redirectUrl">URL to redirect to after authentication. Use {0} for port substitute. Must be registered with exact ports in Amazon Developers Console.</param>
         /// <param name="portSelector">Func to select port for redirect listener.
         /// portSelector(int lastPort, int time) where lastPost is port used last time and
         /// time is number of times selector was called before. To abort port selection throw exception other than HttpListenerException</param>

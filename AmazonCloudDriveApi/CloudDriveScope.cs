@@ -4,11 +4,10 @@
 
 using System;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive
 {
     /// <summary>
-    /// App access scope
+    /// Application access scope
     /// </summary>
     [Flags]
     public enum CloudDriveScope
@@ -44,4 +43,3 @@ namespace Azi.Amazon.CloudDrive
         Write = 32
     }
 }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
