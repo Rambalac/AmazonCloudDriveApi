@@ -93,7 +93,7 @@ namespace Azi.Amazon.CloudDrive
         public byte[] CloseTabResponse { get; set; } = DefaultCloseTabResponse;
 
         /// <inheritdoc/>
-        public async Task<bool> Authentication(string authToken, string authRenewToken, DateTime authTokenExpiration)
+        public async Task<bool> AuthenticationByTokens(string authToken, string authRenewToken, DateTime authTokenExpiration)
         {
             token = new AuthToken
             {
@@ -108,6 +108,30 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
+        public async Task<bool> AuthenticationByCode(string code, string redirectUrl)
+        {
+            var form = new Dictionary<string, string>
+                                {
+                                    { "grant_type", "authorization_code" },
+                                    { "code", code },
+                                    { "client_id", clientId },
+                                    { "client_secret", clientSecret },
+                                    { "redirect_uri", redirectUrl }
+                                };
+            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
+            if (token != null)
+            {
+                CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+
+                await Account.GetEndpoint().ConfigureAwait(false);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <inheritdoc/>
         public string BuildLoginUrl(string redirectUrl, CloudDriveScope scope)
         {
             Contract.Assert(redirectUrl != null);
@@ -116,7 +140,7 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        public async Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = null, string unformatedRedirectUrl = null, Func<int, int, int> portSelector = null)
+        public async Task<bool> AuthenticationByExternalBrowser(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = null, string unformatedRedirectUrl = null, Func<int, int, int> portSelector = null)
         {
             string redirectUrl = CreateListener(unformatedRedirectUrl, portSelector);
 
@@ -254,21 +278,7 @@ namespace Azi.Amazon.CloudDrive
 
             await SendRedirectResponse(context.Response).ConfigureAwait(false);
 
-            var form = new Dictionary<string, string>
-                                {
-                                    { "grant_type", "authorization_code" },
-                                    { "code", code },
-                                    { "client_id", clientId },
-                                    { "client_secret", secret },
-                                    { "redirect_uri", redirectUrl }
-                                };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
-            if (token != null)
-            {
-                CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
-            }
-
-            await Account.GetEndpoint().ConfigureAwait(false);
+            await AuthenticationByCode(code, redirectUrl).ConfigureAwait(false);
         }
 
         private async Task<bool> ProcessUnauthorized(HttpStatusCode arg)

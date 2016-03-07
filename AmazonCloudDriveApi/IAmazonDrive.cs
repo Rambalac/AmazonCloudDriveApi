@@ -50,7 +50,7 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="authRenewToken">Authentication token renew token</param>
         /// <param name="authTokenExpiration">Authentication token expiration time</param>
         /// <returns>True if authenticated</returns>
-        Task<bool> Authentication(string authToken, string authRenewToken, DateTime authTokenExpiration);
+        Task<bool> AuthenticationByTokens(string authToken, string authRenewToken, DateTime authTokenExpiration);
 
         /// <summary>
         /// Constructs URL for authentication
@@ -72,6 +72,14 @@ namespace Azi.Amazon.CloudDrive
         /// time is number of times selector was called before. To abort port selection throw exception other than HttpListenerException</param>
         /// <returns>True if authenticated</returns>
         /// <exception cref="InvalidOperationException">if any selected port could not be opened by default selector</exception>
-        Task<bool> SafeAuthenticationAsync(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = default(CancellationToken?), string redirectUrl = null, Func<int, int, int> portSelector = null);
+        Task<bool> AuthenticationByExternalBrowser(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = default(CancellationToken?), string redirectUrl = null, Func<int, int, int> portSelector = null);
+
+        /// <summary>
+        /// Authenticate using authentication code
+        /// </summary>
+        /// <param name="code">Code from authentication redirect</param>
+        /// <param name="redirectUrl">Redirect URL used to get authentication code</param>
+        /// <returns>True if authenticated</returns>
+        Task<bool> AuthenticationByCode(string code, string redirectUrl);
     }
 }
