@@ -24,7 +24,7 @@ namespace Azi.Amazon.CloudDrive
     public sealed partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive
     {
         private const string LoginUrlBase = "https://www.amazon.com/ap/oa";
-
+        private const string TokenUrl = "https://api.amazon.com/auth/o2/token";
         private static readonly Regex BrowserPathPattern = new Regex("^(?<path>[^\" ]+)|\"(?<path>[^\"]+)\" (?<args>.*)$");
         private static readonly TimeSpan GeneralExpiration = TimeSpan.FromMinutes(5);
 
@@ -118,7 +118,7 @@ namespace Azi.Amazon.CloudDrive
                                     { "client_secret", clientSecret },
                                     { "redirect_uri", redirectUrl }
                                 };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
+            token = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
             if (token != null)
             {
                 CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
@@ -324,7 +324,7 @@ namespace Azi.Amazon.CloudDrive
                         { "client_id", clientId },
                         { "client_secret", clientSecret }
                     };
-            token = await http.PostForm<AuthToken>("https://api.amazon.com/auth/o2/token", form).ConfigureAwait(false);
+            token = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
             if (token != null)
             {
                 CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));

@@ -1,8 +1,4 @@
-﻿// <copyright file="AmazonNodesTests.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-using Xunit;
+﻿using Xunit;
 using System;
 using System.Threading.Tasks;
 

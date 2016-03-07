@@ -1,8 +1,4 @@
-﻿// <copyright file="AmazonDriveTests.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-using Xunit;
+﻿using Xunit;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
