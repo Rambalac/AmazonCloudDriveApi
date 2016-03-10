@@ -22,13 +22,13 @@
   <Import Project="$(NuProjPath)\NuProj.props" Condition="Exists('$(NuProjPath)\NuProj.props')" />
   <PropertyGroup Label="Configuration">
     <Id>AmazonCloudDriveApi</Id>
-    <Version>1.1.1</Version>
+    <Version>1.2</Version>
     <Title>Amazon Cloud Drive API</Title>
     <Authors>Rambalac</Authors>
     <Owners>Rambalac</Owners>
     <Summary>Amazon Cloud Drive API</Summary>
     <Description>General implementation of REST API for Amazon Cloud Drive. Not all functions are implemented, but it can download/upload files and organize files/folders</Description>
-    <ReleaseNotes>Fixed relogin before previouse loging finished</ReleaseNotes>
+    <ReleaseNotes>Auth methods renamed to reflect their function better. Fixed url default param. Added auth by code. </ReleaseNotes>
     <ProjectUrl>https://github.com/Rambalac/AmazonCloudDriveApi</ProjectUrl>
     <LicenseUrl>https://raw.githubusercontent.com/Rambalac/AmazonCloudDriveApi/master/license.txt</LicenseUrl>
     <Copyright>Copyright © Rambalac</Copyright>

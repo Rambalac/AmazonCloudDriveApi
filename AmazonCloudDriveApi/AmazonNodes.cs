@@ -195,17 +195,17 @@ namespace Azi.Amazon.CloudDrive
             return root;
         }
 
-        private string MakeMD5Filter(string md5)
+        private static string MakeMD5Filter(string md5)
         {
             return "contentProperties.md5:" + md5;
         }
 
-        private string MakeNameFilter(string name)
+        private static string MakeNameFilter(string name)
         {
             return "name:" + FilterEscapeChars.Replace(name, "\\$0");
         }
 
-        private string MakeParentFilter(string id)
+        private static string MakeParentFilter(string id)
         {
             return "parents:" + id;
         }

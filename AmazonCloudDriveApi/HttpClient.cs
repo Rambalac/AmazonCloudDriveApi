@@ -23,7 +23,7 @@ namespace Azi.Tools
 
         private static readonly HashSet<HttpStatusCode> RetryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
         private readonly Dictionary<HttpStatusCode, WeakReference<Func<HttpStatusCode, Task<bool>>>> retryErrorProcessor = new Dictionary<HttpStatusCode, WeakReference<Func<HttpStatusCode, Task<bool>>>>();
-        private Func<HttpWebRequest, Task> settingsSetter;
+        private readonly Func<HttpWebRequest, Task> settingsSetter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClient"/> class.
@@ -338,7 +338,7 @@ namespace Azi.Tools
                         using (var input = file.StreamOpener())
                         {
                             var pre = GetMultipartFormPre(file, input.Length, boundry);
-                            var post = GetMultipartFormPost(file, boundry);
+                            var post = GetMultipartFormPost(boundry);
                             client.ContentLength = pre.Length + input.Length + post.Length;
                             using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
                             {
@@ -427,6 +427,66 @@ namespace Azi.Tools
             return null;
         }
 
+        private static Stream GetMultipartFormPost(string boundry)
+        {
+            var result = new MemoryStream(1000);
+            using (var writer = new StreamWriter(result, UTF8, 16, true))
+            {
+                writer.Write($"\r\n--{boundry}--\r\n");
+            }
+
+            result.Position = 0;
+            return result;
+        }
+
+        private static Stream GetMultipartFormPre(FileUpload file, long filelength, string boundry)
+        {
+            var result = new MemoryStream(1000);
+            using (var writer = new StreamWriter(result, UTF8, 16, true))
+            {
+                if (file.Parameters != null)
+                {
+                    foreach (var pair in file.Parameters)
+                    {
+                        writer.Write($"--{boundry}\r\n");
+                        writer.Write($"Content-Disposition: form-data; name=\"{pair.Key}\"\r\n\r\n{pair.Value}\r\n");
+                    }
+                }
+
+                writer.Write($"--{boundry}\r\n");
+                writer.Write($"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
+                writer.Write($"Content-Type: application/octet-stream\r\n");
+
+                writer.Write($"Content-Length: {filelength}\r\n\r\n");
+            }
+
+            result.Position = 0;
+            return result;
+        }
+
+        private static async Task<bool> LogBadResponse(HttpWebResponse response)
+        {
+            try
+            {
+                var message = await response.ReadAsStringAsync().ConfigureAwait(false);
+                if (!RetryCodes.Contains(response.StatusCode))
+                {
+                    throw new HttpWebException(message, response.StatusCode);
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                throw new HttpWebException(e.Message, response.StatusCode, e);
+            }
+        }
+
+        private static TimeSpan RetryDelay(int time)
+        {
+            return TimeSpan.FromSeconds(1 << time);
+        }
+
         private async Task<bool> GeneralExceptionProcessor(Exception ex)
         {
             if (ex is TaskCanceledException)
@@ -474,90 +534,6 @@ namespace Azi.Tools
 
             await settingsSetter(result).ConfigureAwait(false);
             return result;
-        }
-
-        private Stream GetMultipartFormPost(FileUpload file, string boundry)
-        {
-            var result = new MemoryStream(1000);
-            using (var writer = new StreamWriter(result, UTF8, 16, true))
-            {
-                writer.Write($"\r\n--{boundry}--\r\n");
-            }
-
-            result.Position = 0;
-            return result;
-        }
-
-        private Stream GetMultipartFormPre(FileUpload file, long filelength, string boundry)
-        {
-            var result = new MemoryStream(1000);
-            using (var writer = new StreamWriter(result, UTF8, 16, true))
-            {
-                if (file.Parameters != null)
-                {
-                    foreach (var pair in file.Parameters)
-                    {
-                        writer.Write($"--{boundry}\r\n");
-                        writer.Write($"Content-Disposition: form-data; name=\"{pair.Key}\"\r\n\r\n{pair.Value}\r\n");
-                    }
-                }
-
-                writer.Write($"--{boundry}\r\n");
-                writer.Write($"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
-                writer.Write($"Content-Type: application/octet-stream\r\n");
-
-                writer.Write($"Content-Length: {filelength}\r\n\r\n");
-            }
-
-            result.Position = 0;
-            return result;
-        }
-
-        private async Task<bool> LogBadResponse(HttpWebResponse response)
-        {
-            try
-            {
-                var message = await response.ReadAsStringAsync().ConfigureAwait(false);
-                if (!RetryCodes.Contains(response.StatusCode))
-                {
-                    throw new HttpWebException(message, response.StatusCode);
-                }
-
-                return false;
-            }
-            catch (Exception e)
-            {
-                throw new HttpWebException(e.Message, response.StatusCode, e);
-            }
-        }
-
-        private async Task PushFile(Stream input, Stream output, int timeout)
-        {
-            using (input)
-            using (output)
-            {
-                var buf = new byte[81920];
-                int red;
-                do
-                {
-                    red = await input.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false);
-                    if (red == 0)
-                    {
-                        break;
-                    }
-
-                    using (var cancellationSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(timeout)))
-                    {
-                        await output.WriteAsync(buf, 0, red, cancellationSource.Token).ConfigureAwait(false);
-                    }
-                }
-                while (red != 0);
-            }
-        }
-
-        private TimeSpan RetryDelay(int time)
-        {
-            return TimeSpan.FromSeconds(1 << time);
         }
     }
 }

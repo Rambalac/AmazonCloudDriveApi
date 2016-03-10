@@ -23,7 +23,7 @@ namespace Azi.Tools
         public HttpWebException(string message, HttpStatusCode code)
             : base(message)
         {
-            this.StatusCode = code;
+            StatusCode = code;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Azi.Tools
         public HttpWebException(string message, HttpStatusCode code, Exception e)
             : base(message, e)
         {
-            this.StatusCode = code;
+            StatusCode = code;
         }
 
         /// <summary>

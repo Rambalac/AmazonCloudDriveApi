@@ -2,19 +2,19 @@
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
+using Azi.Amazon.CloudDrive.JsonObjects;
+using Azi.Tools;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Net;
 using System.Net.Cache;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Azi.Amazon.CloudDrive.JsonObjects;
-using Azi.Tools;
 
 namespace Azi.Amazon.CloudDrive
 {
@@ -25,17 +25,16 @@ namespace Azi.Amazon.CloudDrive
     {
         private const string LoginUrlBase = "https://www.amazon.com/ap/oa";
         private const string TokenUrl = "https://api.amazon.com/auth/o2/token";
-        private static readonly Regex BrowserPathPattern = new Regex("^(?<path>[^\" ]+)|\"(?<path>[^\"]+)\" (?<args>.*)$");
         private static readonly TimeSpan GeneralExpiration = TimeSpan.FromMinutes(5);
 
-        private static readonly Dictionary<CloudDriveScope, string> ScopeToStringMap = new Dictionary<CloudDriveScope, string>
+        private static readonly Dictionary<CloudDriveScopes, string> ScopeToStringMap = new Dictionary<CloudDriveScopes, string>
         {
-            { CloudDriveScope.ReadImage, "clouddrive:read_image" },
-            { CloudDriveScope.ReadVideo, "clouddrive:read_video" },
-            { CloudDriveScope.ReadDocument, "clouddrive:read_document" },
-            { CloudDriveScope.ReadOther, "clouddrive:read_other" },
-            { CloudDriveScope.ReadAll, "clouddrive:read_all" },
-            { CloudDriveScope.Write, "clouddrive:write" }
+            { CloudDriveScopes.ReadImage, "clouddrive:read_image" },
+            { CloudDriveScopes.ReadVideo, "clouddrive:read_video" },
+            { CloudDriveScopes.ReadDocument, "clouddrive:read_document" },
+            { CloudDriveScopes.ReadOther, "clouddrive:read_other" },
+            { CloudDriveScopes.ReadAll, "clouddrive:read_all" },
+            { CloudDriveScopes.Write, "clouddrive:write" }
         };
 
         private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
@@ -132,7 +131,7 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        public string BuildLoginUrl(string redirectUrl, CloudDriveScope scope)
+        public string BuildLoginUrl(string redirectUrl, CloudDriveScopes scope)
         {
             Contract.Assert(redirectUrl != null);
 
@@ -140,21 +139,21 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        public async Task<bool> AuthenticationByExternalBrowser(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = null, string unformatedRedirectUrl = null, Func<int, int, int> portSelector = null)
+        public async Task<bool> AuthenticationByExternalBrowser(CloudDriveScopes scope, TimeSpan timeout, CancellationToken? cancelToken = null, string unformatedRedirectUrl = "http://localhost:{0}/signin/", Func<int, int, int> portSelector = null)
         {
-            string redirectUrl = CreateListener(unformatedRedirectUrl, portSelector);
-
-            redirectListener.Start();
-            using (var tabProcess = Process.Start(BuildLoginUrl(redirectUrl, scope)))
+            try
             {
-                try
+                string redirectUrl = CreateListener(unformatedRedirectUrl, portSelector);
+
+                redirectListener.Start();
+                using (var tabProcess = Process.Start(BuildLoginUrl(redirectUrl, scope)))
                 {
                     var task = redirectListener.GetContextAsync();
                     var timeoutTask = (cancelToken != null) ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
                     var anytask = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
                     if (anytask == task)
                     {
-                        await ProcessRedirect(await task, clientId, clientSecret, redirectUrl).ConfigureAwait(false);
+                        await ProcessRedirect(await task, redirectUrl).ConfigureAwait(false);
                     }
                     else
                     {
@@ -166,21 +165,21 @@ namespace Azi.Amazon.CloudDrive
                         throw new TimeoutException("No redirection detected");
                     }
                 }
-                finally
-                {
-                    redirectListener.Close();
-                    redirectListener = null;
-                }
+            }
+            finally
+            {
+                redirectListener.Close();
+                redirectListener = null;
             }
 
             return token != null;
         }
 
-        private static string ScopeToString(CloudDriveScope scope)
+        private static string ScopeToString(CloudDriveScopes scope)
         {
             var result = new List<string>();
-            var values = Enum.GetValues(typeof(CloudDriveScope));
-            foreach (CloudDriveScope value in values)
+            var values = Enum.GetValues(typeof(CloudDriveScopes));
+            foreach (CloudDriveScopes value in values)
             {
                 if (scope.HasFlag(value))
                 {
@@ -200,7 +199,7 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        private string CreateListener(string redirectUrl = "http://localhost:{0}/signin/", Func<int, int, int> portSelector = null)
+        private string CreateListener(string redirectUrl, Func<int, int, int> portSelector = null)
         {
             if (redirectListener != null)
             {
@@ -215,9 +214,10 @@ namespace Azi.Amazon.CloudDrive
                 try
                 {
                     port = (portSelector ?? DefaultPortSelector).Invoke(port, time++);
-                    listener.Prefixes.Add(redirectUrl);
+                    var realUrl = string.Format(CultureInfo.InvariantCulture, redirectUrl, port);
+                    listener.Prefixes.Add(realUrl);
                     redirectListener = listener;
-                    return string.Format(redirectUrl, port);
+                    return realUrl;
                 }
                 catch (HttpListenerException)
                 {
@@ -265,7 +265,7 @@ namespace Azi.Amazon.CloudDrive
             return token?.access_token;
         }
 
-        private async Task ProcessRedirect(HttpListenerContext context, string clientId, string secret, string redirectUrl)
+        private async Task ProcessRedirect(HttpListenerContext context, string redirectUrl)
         {
             var error = HttpUtility.ParseQueryString(context.Request.Url.Query).Get("error_description");
 
@@ -303,7 +303,7 @@ namespace Azi.Amazon.CloudDrive
             }
 
             client.CachePolicy = standartCache;
-            client.UserAgent = "AZIACDDokanNet/" + this.GetType().Assembly.ImageRuntimeVersion;
+            client.UserAgent = "AZIACDDokanNet/" + GetType().Assembly.ImageRuntimeVersion;
 
             client.Timeout = 15000;
 

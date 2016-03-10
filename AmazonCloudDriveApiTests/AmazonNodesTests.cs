@@ -23,7 +23,7 @@ namespace Azi.Amazon.CloudDrive.Tests
                 }
             }
 
-            if (await amazon.AuthenticationByExternalBrowser(CloudDriveScope.ReadAll | CloudDriveScope.Write, TimeSpan.FromMinutes(10)))
+            if (await amazon.AuthenticationByExternalBrowser(CloudDriveScopes.ReadAll | CloudDriveScopes.Write, TimeSpan.FromMinutes(10)))
             {
                 return amazon;
             }

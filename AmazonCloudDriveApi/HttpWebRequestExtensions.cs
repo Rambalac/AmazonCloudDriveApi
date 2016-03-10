@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Diagnostics.Contracts;
 
 namespace Azi.Tools
 {
@@ -25,6 +26,7 @@ namespace Azi.Tools
         /// <returns>ContentRange object</returns>
         public static ContentRangeHeaderValue GetContentRange(this WebHeaderCollection headers)
         {
+            Contract.Requires(headers != null);
             return ContentRangeHeaderValue.Parse(headers["Content-Range"]);
         }
 
@@ -33,7 +35,11 @@ namespace Azi.Tools
         /// </summary>
         /// <param name="response">Response to check</param>
         /// <returns>True if success</returns>
-        public static bool IsSuccessStatusCode(this HttpWebResponse response) => SuccessStatusCodes.Contains(response.StatusCode);
+        public static bool IsSuccessStatusCode(this HttpWebResponse response)
+        {
+            Contract.Requires(response != null);
+            return SuccessStatusCodes.Contains(response.StatusCode);
+        }
 
         /// <summary>
         /// Returns object as parsed JSON from response.

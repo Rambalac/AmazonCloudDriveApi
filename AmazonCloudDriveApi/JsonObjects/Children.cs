@@ -9,7 +9,7 @@ using System.Collections.Generic;
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 namespace Azi.Amazon.CloudDrive.JsonObjects
 {
-    internal class Children
+    public class Children
     {
         public int count { get; set; }
 

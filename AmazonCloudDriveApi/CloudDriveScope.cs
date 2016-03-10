@@ -10,7 +10,7 @@ namespace Azi.Amazon.CloudDrive
     /// Application access scope
     /// </summary>
     [Flags]
-    public enum CloudDriveScope
+    public enum CloudDriveScopes
     {
         /// <summary>
         /// Read images

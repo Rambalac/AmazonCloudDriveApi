@@ -58,7 +58,7 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="redirectUrl">URL to redirect to after authentication. Must be registered in Amazon Developers Console.</param>
         /// <param name="scope">Access scope. Must be subset of application registered scopes in Amazon Developers Console.</param>
         /// <returns>URL string</returns>
-        string BuildLoginUrl(string redirectUrl, CloudDriveScope scope);
+        string BuildLoginUrl(string redirectUrl, CloudDriveScopes scope);
 
         /// <summary>
         /// Opens Amazon Cloud Drive authentication in default browser. Then it starts listener for port 45674 if portSelector is null
@@ -66,13 +66,13 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="scope">Your Application scope to access cloud</param>
         /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
         /// <param name="cancelToken">Cancellation for authentication. Can be null.</param>
-        /// <param name="redirectUrl">URL to redirect to after authentication. Use {0} for port substitute. Must be registered with exact ports in Amazon Developers Console.</param>
+        /// <param name="unformatedRedirectUrl">URL to redirect to after authentication. Use {0} for port substitute. Must be registered with exact ports in Amazon Developers Console.</param>
         /// <param name="portSelector">Func to select port for redirect listener.
         /// portSelector(int lastPort, int time) where lastPost is port used last time and
         /// time is number of times selector was called before. To abort port selection throw exception other than HttpListenerException</param>
         /// <returns>True if authenticated</returns>
         /// <exception cref="InvalidOperationException">if any selected port could not be opened by default selector</exception>
-        Task<bool> AuthenticationByExternalBrowser(CloudDriveScope scope, TimeSpan timeout, CancellationToken? cancelToken = default(CancellationToken?), string redirectUrl = null, Func<int, int, int> portSelector = null);
+        Task<bool> AuthenticationByExternalBrowser(CloudDriveScopes scope, TimeSpan timeout, CancellationToken? cancelToken = default(CancellationToken?), string unformatedRedirectUrl = "http://localhost:{0}/signin/", Func<int, int, int> portSelector = null);
 
         /// <summary>
         /// Authenticate using authentication code
