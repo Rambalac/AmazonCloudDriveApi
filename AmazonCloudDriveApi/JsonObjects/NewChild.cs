@@ -16,6 +16,20 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
 
         public string[] parents { get; set; }
     }
+
+    public class AmazonV2
+    {
+        public readonly string resourceVersion = "V2";
+
+        public readonly string ContentType = "JSON";
+    }
+
+    public class NewSharedCollection : AmazonV2
+    {
+        public string name { get; set; }
+
+        public string kind { get; set; }
+    }
 }
 #pragma warning restore SA1600 // Elements must be documented
 #pragma warning restore SA1300 // Element must begin with upper-case letter

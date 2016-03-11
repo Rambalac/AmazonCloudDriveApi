@@ -101,6 +101,22 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
 
         public AmazonNodeImage image { get; set; }
     }
+
+    public class AmazonShareOperation : AmazonV2
+    {
+        public string op { get; set; }
+
+        public List<string> value { get; set; } = new List<string>();
+    }
+
+    public class AmazonSharedCollection
+    {
+        public string id { get; set; }
+
+        public string shareURL { get; set; }
+
+        public string shareId { get; set; }
+    }
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning restore SA1300 // Element must begin with upper-case letter

@@ -34,6 +34,17 @@ namespace Azi.Amazon.CloudDrive.Tests
         protected const string Testdir = "\\ACDDokanNetTest\\";
 
         [Fact]
+        public async Task ShareTest()
+        {
+            var amazon = await Authenticate();
+            var shared = await amazon.Nodes.CreateSharedCollection("test2");
+
+            await amazon.Nodes.Add(shared.id, "Sn0PovYLQ8WXVKpL24qgeg");
+            //await amazon.Nodes.Add(shared.id, new string[] { "Sn0PovYLQ8WXVKpL24qgeg" });
+            //await amazon.Nodes.Add("PYcwUWskRUqaK9JGDKbstg", new string[] { "Sn0PovYLQ8WXVKpL24qgeg" });
+        }
+
+        [Fact]
         public void GetNodeTest()
         {
             Assert.True(false, "This test needs an implementation");

@@ -28,6 +28,33 @@ namespace Azi.Amazon.CloudDrive
             await http.Send<object>(HttpMethod.Put, url).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Requests to add nodes to parent. Each node can have multiple parents.
+        /// </summary>
+        /// <param name="parentid">Parent node id.</param>
+        /// <param name="nodeids">Nodes id to add.</param>
+        /// <returns>Operation Task</returns>
+        public async Task Add(string parentid, IEnumerable<string> nodeids)
+        {
+            var url = string.Format("{0}/nodes/{1}/children", await GetMetadataUrl().ConfigureAwait(false), parentid);
+            var op = new AmazonShareOperation { op = "add" };
+            op.value.AddRange(nodeids);
+
+            await http.Send<AmazonShareOperation, AmazonSharedCollection>(new HttpMethod("PATCH"), url, op).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Create Shared collection
+        /// </summary>
+        /// <param name="name">Collection name</param>
+        /// <returns></returns>
+        public async Task<AmazonSharedCollection> CreateSharedCollection(string name)
+        {
+            var url = string.Format("{0}nodes", await GetMetadataUrl().ConfigureAwait(false));
+            var folder = new NewSharedCollection { name = name, kind = "SHARED_COLLECTION" };
+            return await http.Post<NewSharedCollection, AmazonSharedCollection>(url, folder).ConfigureAwait(false);
+        }
+
         /// <inheritdoc/>
         async Task<AmazonNode> IAmazonNodes.CreateFolder(string parentId, string name)
         {

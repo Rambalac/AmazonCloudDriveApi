@@ -333,11 +333,16 @@ namespace Azi.Tools
 
                         string boundry = Guid.NewGuid().ToString();
                         client.ContentType = $"multipart/form-data; boundary={boundry}";
+                        string contentRange = null;
+                        if (file.ContentOffset != null && file.ContentLength != null)
+                        {
+                            contentRange = $"{file.ContentOffset}-{file.ContentOffset + file.ContentLength - 1}/*";
+                        }
                         client.SendChunked = true;
 
                         using (var input = file.StreamOpener())
                         {
-                            var pre = GetMultipartFormPre(file, input.Length, boundry);
+                            var pre = GetMultipartFormPre(file, input.Length, boundry, contentRange);
                             var post = GetMultipartFormPost(boundry);
                             client.ContentLength = pre.Length + input.Length + post.Length;
                             using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
@@ -439,7 +444,7 @@ namespace Azi.Tools
             return result;
         }
 
-        private static Stream GetMultipartFormPre(FileUpload file, long filelength, string boundry)
+        private static Stream GetMultipartFormPre(FileUpload file, long filelength, string boundry, string contenRange = null)
         {
             var result = new MemoryStream(1000);
             using (var writer = new StreamWriter(result, UTF8, 16, true))
@@ -456,7 +461,7 @@ namespace Azi.Tools
                 writer.Write($"--{boundry}\r\n");
                 writer.Write($"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
                 writer.Write($"Content-Type: application/octet-stream\r\n");
-
+                if (contenRange != null) writer.Write($"Content-Range: {contenRange}\r\n");
                 writer.Write($"Content-Length: {filelength}\r\n\r\n");
             }
 
@@ -521,6 +526,7 @@ namespace Azi.Tools
                         }
                     }
 
+                    await LogBadResponse(webresp).ConfigureAwait(false);
                     throw new HttpWebException(webex.Message, webresp.StatusCode);
                 }
             }

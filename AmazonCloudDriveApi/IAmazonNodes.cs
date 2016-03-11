@@ -21,6 +21,10 @@ namespace Azi.Amazon.CloudDrive
         /// <returns>Operation Task</returns>
         Task Add(string parentid, string nodeid);
 
+        Task Add(string parentid, IEnumerable<string> nodeids);
+
+        Task<AmazonSharedCollection> CreateSharedCollection(string name);
+
         /// <summary>
         /// Create Folder node
         /// </summary>

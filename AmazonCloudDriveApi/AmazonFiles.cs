@@ -26,6 +26,21 @@ namespace Azi.Amazon.CloudDrive
             await http.GetToStreamAsync(url, stream, fileOffset, length, bufferSize, progress).ConfigureAwait(false);
         }
 
+        //public async Task Patch(string id, int offset, int length, Func<MemoryStream> streamCreator)
+        //{
+        //    var url = string.Format("{0}nodes/{1}/content", await amazon.GetContentUrl().ConfigureAwait(false), id);
+        //    var file = new FileUpload
+        //    {
+        //        StreamOpener = streamCreator,
+        //        FileName = id,
+        //        FormName = "content",
+        //        ContentOffset=offset,
+        //        ContentLength=length
+        //    };
+        //    //await http.SendFile<AmazonNode>(HttpMethod.Put, url, file).ConfigureAwait(false);
+        //    await http.SendFile<AmazonNode>(new HttpMethod("PATCH"), url, file).ConfigureAwait(false);
+        //}
+
         /// <inheritdoc/>
         async Task IAmazonFiles.Download(string id, Func<HttpWebResponse, Task> streammer, long? fileOffset, long? length)
         {

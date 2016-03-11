@@ -32,5 +32,9 @@ namespace Azi.Tools
         /// Gets or sets Stream creator func with content to upload. Can be requested multiple time in case of retry.
         /// </summary>
         public Func<Stream> StreamOpener { get; set; }
+
+        public long? ContentOffset { get; set; } = null;
+
+        public int? ContentLength { get; set; } = null;
     }
 }
