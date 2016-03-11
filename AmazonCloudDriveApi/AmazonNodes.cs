@@ -37,10 +37,13 @@ namespace Azi.Amazon.CloudDrive
         public async Task Add(string parentid, IEnumerable<string> nodeids)
         {
             var url = string.Format("{0}/nodes/{1}/children", await GetMetadataUrl().ConfigureAwait(false), parentid);
-            var op = new AmazonShareOperation { op = "add" };
-            op.value.AddRange(nodeids);
+            var op = new AmazonBulkOperation
+            {
+                op = "add",
+                value = nodeids.ToList()
+            };
 
-            await http.Send<AmazonShareOperation, AmazonSharedCollection>(new HttpMethod("PATCH"), url, op).ConfigureAwait(false);
+            await http.Send<AmazonBulkOperation, AmazonSharedCollection>(new HttpMethod("PATCH"), url, op).ConfigureAwait(false);
         }
 
         /// <summary>

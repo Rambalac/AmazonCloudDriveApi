@@ -39,8 +39,8 @@ namespace Azi.Amazon.CloudDrive.Tests
             var amazon = await Authenticate();
             var shared = await amazon.Nodes.CreateSharedCollection("test2");
 
-            await amazon.Nodes.Add(shared.id, "Sn0PovYLQ8WXVKpL24qgeg");
-            //await amazon.Nodes.Add(shared.id, new string[] { "Sn0PovYLQ8WXVKpL24qgeg" });
+            await amazon.Nodes.Add(shared.id, new string[] { "Sn0PovYLQ8WXVKpL24qgeg" });
+            //await amazon.Nodes.Add(shared.id, "Sn0PovYLQ8WXVKpL24qgeg");
             //await amazon.Nodes.Add("PYcwUWskRUqaK9JGDKbstg", new string[] { "Sn0PovYLQ8WXVKpL24qgeg" });
         }
 

@@ -102,11 +102,11 @@ namespace Azi.Amazon.CloudDrive.JsonObjects
         public AmazonNodeImage image { get; set; }
     }
 
-    public class AmazonShareOperation : AmazonV2
+    public class AmazonBulkOperation : AmazonV2
     {
         public string op { get; set; }
 
-        public List<string> value { get; set; } = new List<string>();
+        public List<string> value { get; set; }
     }
 
     public class AmazonSharedCollection
