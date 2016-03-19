@@ -1,9 +1,14 @@
-﻿using Xunit;
+﻿using System;
+using System.IO;
+using System.Linq;
+using Xunit;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
-    public class AmazonFilesTests
+    public class AmazonFilesTests : AmazonTestsBase
     {
+        private const string testFileName = "testFile.txt";
+
         [Fact]
         public void OverwriteTest()
         {
@@ -17,9 +22,37 @@ namespace Azi.Amazon.CloudDrive.Tests
         }
 
         [Fact]
-        public void DownloadTest()
+        public async void DownloadWithProgressCancelTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+
+            var memStr = new MemoryStream();
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => 
+                await Amazon.Files.Download(testFile.id, memStr, bufferSize:10, progress: ProgressCancel));
+          Assert.Equal(10, memStr.Position);
+        }
+
+        private long ProgressCancel(long arg)
+        {
+            throw new OperationCanceledException();
+        }
+
+        [Fact]
+        public async void DownloadWithProgressTest()
+        {
+            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+
+            var memStr = new MemoryStream();
+            await Amazon.Files.Download(testFile.id, memStr, progress: Progress1);
+
+            Assert.Equal(testFileContent, memStr.ToArray());
+        }
+
+        private long Progress1(long arg)
+        {
+            return arg + 10;
         }
 
         [Fact]

@@ -98,12 +98,14 @@ namespace Azi.Tools
                             byte[] buff = new byte[Math.Min(bufferSize, (response.ContentLength != -1) ? response.ContentLength : long.MaxValue)];
                             int red;
                             long nextProgress = -1;
+                            long totalRead = 0;
                             while ((red = await input.ReadAsync(buff, 0, buff.Length).ConfigureAwait(false)) > 0)
                             {
+                                totalRead += red;
                                 await stream.WriteAsync(buff, 0, red).ConfigureAwait(false);
-                                if (progress != null && input.Position >= nextProgress)
+                                if (progress != null && totalRead >= nextProgress)
                                 {
-                                    nextProgress = progress.Invoke(input.Position);
+                                    nextProgress = progress.Invoke(totalRead);
                                 }
                             }
                             if (nextProgress == -1)
