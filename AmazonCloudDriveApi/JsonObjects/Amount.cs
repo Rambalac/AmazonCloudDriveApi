@@ -2,7 +2,6 @@
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
-using System;
 
 #pragma warning disable SA1600 // Elements must be documented
 #pragma warning disable SA1300 // Element must begin with upper-case letter

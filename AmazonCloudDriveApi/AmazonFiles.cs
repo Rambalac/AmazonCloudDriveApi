@@ -1,4 +1,4 @@
-// <copyright file="AmazonFiles.cs" company="Rambalac">
+﻿// <copyright file="AmazonFiles.cs" company="Rambalac">
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
@@ -11,9 +11,11 @@ using System.Threading.Tasks;
 using Azi.Amazon.CloudDrive.JsonObjects;
 using Azi.Tools;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace Azi.Amazon.CloudDrive
 {
+
     /// <summary>
     /// Part to work with file upload and download
     /// </summary>
@@ -41,35 +43,49 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator)
+        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator, CancellationToken? token)
         {
             var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
-            var file = new FileUpload
+            var file = new SendFileInfo
             {
                 StreamOpener = streamCreator,
                 FileName = id,
-                FormName = "content"
+                FormName = "content",
+                CancellationToken = token
             };
             return await http.SendFile<AmazonNode>(HttpMethod.Put, url, file).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
-        async Task<AmazonNode> IAmazonFiles.UploadNew(string parentId, string fileName, Func<Stream> streamCreator, bool allowDuplicate)
+        async Task<AmazonNode> IAmazonFiles.UploadNew(string parentId, string fileName, Func<Stream> streamOpener, bool allowDuplicate)
+        {
+            return await ((IAmazonFiles)this).UploadNew(new FileUpload
+            {
+                ParentId = parentId,
+                AllowDuplicate = allowDuplicate,
+                FileName = fileName,
+                StreamOpener = streamOpener
+            });
+        }
+
+        /// <inheritdoc/>
+        async Task<AmazonNode> IAmazonFiles.UploadNew(FileUpload fileUpload)
         {
             var url = string.Format("{0}nodes", await GetContentUrl().ConfigureAwait(false));
-            if (allowDuplicate)
+            if (fileUpload.AllowDuplicate)
             {
                 url += "?suppress=deduplication";
             }
 
-            var obj = new NewChild { name = fileName, parents = new string[] { parentId }, kind = "FILE" };
+            var obj = new NewChild { name = fileUpload.FileName, parents = new string[] { fileUpload.ParentId }, kind = "FILE" };
             string meta = JsonConvert.SerializeObject(obj);
 
-            var file = new FileUpload
+            var file = new SendFileInfo
             {
-                StreamOpener = streamCreator,
-                FileName = fileName,
+                StreamOpener = fileUpload.StreamOpener,
+                FileName = fileUpload.FileName,
                 FormName = "content",
+                CancellationToken = fileUpload.CancellationToken,
                 Parameters = new Dictionary<string, string>
                     {
                         { "metadata", meta }

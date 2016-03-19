@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Azi.Amazon.CloudDrive.Tests
@@ -16,9 +18,21 @@ namespace Azi.Amazon.CloudDrive.Tests
         }
 
         [Fact]
-        public void UploadNewTest()
+        public async void UploadNewCancallationTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var token = new CancellationTokenSource();
+            token.Cancel();
+
+            var fileUpload = new FileUpload
+            {
+                ParentId = TestDirId,
+                FileName = testFileName,
+                StreamOpener = () => new MemoryStream(testFileContent),
+                CancellationToken = token.Token
+            };
+
+            await Assert.ThrowsAsync<TaskCanceledException>(async () => await Amazon.Files.UploadNew(fileUpload));
         }
 
         [Fact]
@@ -28,9 +42,9 @@ namespace Azi.Amazon.CloudDrive.Tests
             var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
 
             var memStr = new MemoryStream();
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => 
-                await Amazon.Files.Download(testFile.id, memStr, bufferSize:10, progress: ProgressCancel));
-          Assert.Equal(10, memStr.Position);
+            await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                await Amazon.Files.Download(testFile.id, memStr, bufferSize: 10, progress: ProgressCancel));
+            Assert.Equal(10, memStr.Position);
         }
 
         private long ProgressCancel(long arg)

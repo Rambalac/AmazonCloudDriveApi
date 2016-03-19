@@ -1,5 +1,4 @@
 ﻿using Xunit;
-using System;
 using System.Threading.Tasks;
 
 namespace Azi.Amazon.CloudDrive.Tests

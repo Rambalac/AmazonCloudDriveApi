@@ -79,6 +79,7 @@
     <Compile Include="JsonObjects\Usage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Retry.cs" />
+    <Compile Include="SendFileInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AmazonCloudDriveApi.ruleset" />

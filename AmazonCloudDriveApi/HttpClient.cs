@@ -321,7 +321,7 @@ namespace Azi.Tools
         /// <param name="url">URL for request</param>
         /// <param name="file">File upload parameters</param>
         /// <returns>Async result object</returns>
-        public async Task<R> SendFile<R>(HttpMethod method, string url, FileUpload file)
+        public async Task<R> SendFile<R>(HttpMethod method, string url, SendFileInfo file)
         {
             R result = default(R);
             await Retry.Do(
@@ -344,9 +344,18 @@ namespace Azi.Tools
                             client.ContentLength = pre.Length + input.Length + post.Length;
                             using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
                             {
-                                await pre.CopyToAsync(output).ConfigureAwait(false);
-                                await input.CopyToAsync(output).ConfigureAwait(false);
-                                await post.CopyToAsync(output).ConfigureAwait(false);
+                                if (file.CancellationToken != null)
+                                {
+                                    var token = (CancellationToken)file.CancellationToken;
+                                    await pre.CopyToAsync(output, 81920, token).ConfigureAwait(false);
+                                    await input.CopyToAsync(output, 81920, token).ConfigureAwait(false);
+                                    await post.CopyToAsync(output, 81920, token).ConfigureAwait(false);
+                                }
+                                else {
+                                    await pre.CopyToAsync(output).ConfigureAwait(false);
+                                    await input.CopyToAsync(output).ConfigureAwait(false);
+                                    await post.CopyToAsync(output).ConfigureAwait(false);
+                                }
                             }
                         }
                         using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
@@ -441,7 +450,7 @@ namespace Azi.Tools
             return result;
         }
 
-        private static Stream GetMultipartFormPre(FileUpload file, long filelength, string boundry)
+        private static Stream GetMultipartFormPre(SendFileInfo file, long filelength, string boundry)
         {
             var result = new MemoryStream(1000);
             using (var writer = new StreamWriter(result, UTF8, 16, true))
@@ -493,7 +502,7 @@ namespace Azi.Tools
         {
             if (ex is TaskCanceledException)
             {
-                return false;
+                throw ex;
             }
 
             var webex = SearchForException<WebException>(ex);

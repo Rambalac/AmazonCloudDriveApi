@@ -7,6 +7,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Azi.Amazon.CloudDrive.JsonObjects;
+using System.Threading;
 
 namespace Azi.Amazon.CloudDrive
 {
@@ -53,8 +54,9 @@ namespace Azi.Amazon.CloudDrive
         /// </summary>
         /// <param name="id">File id to overwrite.</param>
         /// <param name="streamCreator">Func returning Stream for data. Can be called multiple times if retry happened. Stream will be closed by method.</param>
+        /// <param name="token">Upload cancellation token</param>
         /// <returns>Node info for overwritten file</returns>
-        Task<AmazonNode> Overwrite(string id, Func<Stream> streamCreator);
+        Task<AmazonNode> Overwrite(string id, Func<Stream> streamCreator, CancellationToken? token = null);
 
         /// <summary>
         /// Upload file to folder.
@@ -66,5 +68,12 @@ namespace Azi.Amazon.CloudDrive
         /// If it's False and file MD5 is the same as some other file in the cloud HTTP error Conflict will be thrown</param>
         /// <returns>Node info for new file</returns>
         Task<AmazonNode> UploadNew(string parentId, string fileName, Func<Stream> streamCreator, bool allowDuplicate = true);
+
+        /// <summary>
+        /// Upload file to folder.
+        /// </summary>
+        /// <param name="fileUpload">Information about new file</param>
+        /// <returns>Node info for new file</returns>
+        Task<AmazonNode> UploadNew(FileUpload fileUpload);
     }
 }
