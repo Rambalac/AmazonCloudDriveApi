@@ -22,6 +22,9 @@ namespace Azi.Amazon.CloudDrive.Tests
         protected async Task<AmazonDrive> Authenticate()
         {
             var settings = Properties.Settings.Default;
+
+            // AmazonSecret is in git ignore because Amazon App info should not be public. 
+            // So to run tests you need to create your own class with your App Id and Secret.
             var amazon = new AmazonDrive(AmazonSecret.ClientId, AmazonSecret.ClientSecret);
             amazon.OnTokenUpdate = this;
 
