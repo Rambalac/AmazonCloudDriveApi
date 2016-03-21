@@ -38,5 +38,16 @@ namespace Azi.Tools
         /// Gets or sets upload Cancellation Token
         /// </summary>
         public CancellationToken? CancellationToken { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets size of memory buffer for stream operations
+        /// </summary>
+        public int BufferSize { get; set; } = 81920;
+
+        /// <summary>
+        /// Gets or sets Func that receive progress and provide next position for progress report.
+        /// Next position is not guarantied and depends on buffer size.
+        /// </summary>
+        public Func<long, long> Progress { get; set; } = null;
     }
 }

@@ -344,18 +344,10 @@ namespace Azi.Tools
                             client.ContentLength = pre.Length + input.Length + post.Length;
                             using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
                             {
-                                if (file.CancellationToken != null)
-                                {
-                                    var token = (CancellationToken)file.CancellationToken;
-                                    await pre.CopyToAsync(output, 81920, token).ConfigureAwait(false);
-                                    await input.CopyToAsync(output, 81920, token).ConfigureAwait(false);
-                                    await post.CopyToAsync(output, 81920, token).ConfigureAwait(false);
-                                }
-                                else {
-                                    await pre.CopyToAsync(output).ConfigureAwait(false);
-                                    await input.CopyToAsync(output).ConfigureAwait(false);
-                                    await post.CopyToAsync(output).ConfigureAwait(false);
-                                }
+                                var state = new CopyStreamState();
+                                await CopyStreams(pre, output, file, state).ConfigureAwait(false);
+                                await CopyStreams(input, output, file, state).ConfigureAwait(false);
+                                await CopyStreams(post, output, file, state).ConfigureAwait(false);
                             }
                         }
                         using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
@@ -436,6 +428,26 @@ namespace Azi.Tools
             }
 
             return null;
+        }
+
+        private static async Task CopyStreams(Stream source, Stream destination, SendFileInfo info, CopyStreamState state)
+        {
+            var buffer = new byte[info.BufferSize];
+            int bytesRead;
+            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                if (info.CancellationToken != null && info.CancellationToken.Value.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
+
+                await destination.WriteAsync(buffer, 0, bytesRead);
+                state.Pos += bytesRead;
+                if (info.Progress != null && state.Pos >= state.NextPos)
+                {
+                    state.NextPos = info.Progress.Invoke(state.Pos);
+                }
+            }
         }
 
         private static Stream GetMultipartFormPost(string boundry)
@@ -545,6 +557,13 @@ namespace Azi.Tools
 
             await settingsSetter(result).ConfigureAwait(false);
             return result;
+        }
+
+        private class CopyStreamState
+        {
+            public long Pos { get; set; } = 0;
+
+            public long NextPos { get; set; } = -1;
         }
     }
 }
