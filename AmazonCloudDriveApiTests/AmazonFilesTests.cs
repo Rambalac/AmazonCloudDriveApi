@@ -1,15 +1,25 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
     public class AmazonFilesTests : AmazonTestsBase
     {
         private const string testFileName = "testFile.txt";
+
+        private readonly ITestOutputHelper output;
+
+        public AmazonFilesTests(ITestOutputHelper testOutputHelper)
+        {
+            output = testOutputHelper;
+        }
+
 
         [Fact]
         public void OverwriteTest()
@@ -18,7 +28,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         }
 
         [Fact]
-        public async void UploadNewCancallationTest()
+        public async Task UploadNewCancallationTest()
         {
             byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var token = new CancellationTokenSource();
@@ -36,7 +46,31 @@ namespace Azi.Amazon.CloudDrive.Tests
         }
 
         [Fact]
-        public async void DownloadWithProgressCancelTest()
+        public async Task UploadNewProgressTest()
+        {
+            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            int totalProgressCalls = 0;
+            var fileUpload = new FileUpload
+            {
+                ParentId = TestDirId,
+                FileName = testFileName,
+                StreamOpener = () => new MemoryStream(testFileContent),
+                BufferSize = 10,
+                Progress = (pos) =>
+                {
+                    output.WriteLine(pos.ToString());
+                    totalProgressCalls++;
+                    return pos + 10;
+                }
+            };
+
+            var node = await Amazon.Files.UploadNew(fileUpload);
+            Assert.NotNull(node);
+            Assert.Equal(138, totalProgressCalls); //Not only content, MIME headers are counted too
+        }
+
+        [Fact]
+        public async Task DownloadWithProgressCancelTest()
         {
             byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
@@ -53,7 +87,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         }
 
         [Fact]
-        public async void DownloadWithProgressTest()
+        public async Task DownloadWithProgressTest()
         {
             byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));

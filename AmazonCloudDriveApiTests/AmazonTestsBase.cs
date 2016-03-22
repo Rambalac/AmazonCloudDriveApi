@@ -11,6 +11,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         {
             Amazon = Authenticate().Result;
             var rootId = Amazon.Nodes.GetRoot().Result.id;
+            var TestDir = TestDirBase + new Random().Next();
             var node = Amazon.Nodes.GetChild(rootId, TestDir).Result;
             if (node == null)
             {
@@ -47,7 +48,7 @@ namespace Azi.Amazon.CloudDrive.Tests
             return null;
         }
 
-        protected const string TestDir = "ACDDokanNetTest";
+        protected const string TestDirBase = "ACDDokanNetTest";
 
         protected string TestDirId;
 

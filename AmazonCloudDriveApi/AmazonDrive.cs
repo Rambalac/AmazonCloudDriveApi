@@ -65,6 +65,11 @@ namespace Azi.Amazon.CloudDrive
             this.clientId = clientId;
             http = new Tools.HttpClient(SettingsSetter);
             http.AddRetryErrorProcessor(HttpStatusCode.Unauthorized, ProcessUnauthorized);
+            http.AddRetryErrorProcessor(429, async (code) =>
+                {
+                    await Task.Delay(1000);
+                    return true;
+                });
         }
 
         /// <inheritdoc/>

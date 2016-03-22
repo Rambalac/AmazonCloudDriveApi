@@ -37,7 +37,7 @@ namespace Azi.Amazon.CloudDrive
         /// Gets or sets a value indicating whether allow duplicate uploads allowed.
         /// If it's False and file MD5 is the same as some other file in the cloud then HTTP error Conflict will be thrown
         /// </summary>
-        public bool AllowDuplicate { get; set; }
+        public bool AllowDuplicate { get; set; } = true;
 
         /// <summary>
         /// Gets or sets size of memory buffer for stream operations
