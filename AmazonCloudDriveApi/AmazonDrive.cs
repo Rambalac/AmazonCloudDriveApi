@@ -41,12 +41,10 @@ namespace Azi.Amazon.CloudDrive
 
         private readonly HttpClient http;
 
-        private readonly RequestCachePolicy standartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
+        private static RequestCachePolicy standartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
 
         private string clientId;
         private string clientSecret;
-
-        private HttpListener redirectListener;
 
         private AuthToken token;
 
@@ -146,10 +144,9 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         public async Task<bool> AuthenticationByExternalBrowser(CloudDriveScopes scope, TimeSpan timeout, CancellationToken? cancelToken = null, string unformatedRedirectUrl = "http://localhost:{0}/signin/", Func<int, int, int> portSelector = null)
         {
-            try
+            string redirectUrl;
+            using (var redirectListener = CreateListener(unformatedRedirectUrl, out redirectUrl, portSelector))
             {
-                string redirectUrl = CreateListener(unformatedRedirectUrl, portSelector);
-
                 redirectListener.Start();
                 using (var tabProcess = Process.Start(BuildLoginUrl(redirectUrl, scope)))
                 {
@@ -170,11 +167,6 @@ namespace Azi.Amazon.CloudDrive
                         throw new TimeoutException("No redirection detected");
                     }
                 }
-            }
-            finally
-            {
-                redirectListener.Close();
-                redirectListener = null;
             }
 
             return token != null;
@@ -204,13 +196,8 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        private string CreateListener(string redirectUrl, Func<int, int, int> portSelector = null)
+        private HttpListener CreateListener(string redirectUrl, out string realRedirectUrl, Func<int, int, int> portSelector = null)
         {
-            if (redirectListener != null)
-            {
-                redirectListener.Close();
-            }
-
             var listener = new HttpListener();
             int port = 0;
             int time = 0;
@@ -219,10 +206,9 @@ namespace Azi.Amazon.CloudDrive
                 try
                 {
                     port = (portSelector ?? DefaultPortSelector).Invoke(port, time++);
-                    var realUrl = string.Format(CultureInfo.InvariantCulture, redirectUrl, port);
-                    listener.Prefixes.Add(realUrl);
-                    redirectListener = listener;
-                    return realUrl;
+                    realRedirectUrl = string.Format(CultureInfo.InvariantCulture, redirectUrl, port);
+                    listener.Prefixes.Add(realRedirectUrl);
+                    return listener;
                 }
                 catch (HttpListenerException)
                 {
