@@ -1,13 +1,18 @@
-﻿using Xunit;
+﻿using System;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
     public class AmazonDriveTests
     {
-        [Fact]
-        public void AuthenticationTest()
+        [Fact(Skip = "Not automatic")]
+        public async Task AuthenticationByExternalBrowserTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            var amazon = new AmazonDrive(AmazonSecret.ClientId, AmazonSecret.ClientSecret);
+
+            var result = await amazon.AuthenticationByExternalBrowser(CloudDriveScopes.ReadAll | CloudDriveScopes.Write, TimeSpan.FromMinutes(1));
+            Assert.True(result);
         }
 
         [Fact]

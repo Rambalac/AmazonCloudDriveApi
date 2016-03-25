@@ -37,7 +37,9 @@ namespace Azi.Amazon.CloudDrive
             { CloudDriveScopes.Write, "clouddrive:write" }
         };
 
-        private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.open('', '_parent','');window.close();</SCRIPT>You can close this tab");
+        private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.close;</SCRIPT>You can close this tab");
+
+        private static readonly string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>start";
 
         private readonly HttpClient http;
 
@@ -148,23 +150,36 @@ namespace Azi.Amazon.CloudDrive
             using (var redirectListener = CreateListener(unformatedRedirectUrl, out redirectUrl, portSelector))
             {
                 redirectListener.Start();
-                using (var tabProcess = Process.Start(BuildLoginUrl(redirectUrl, scope)))
+                var loginurl = BuildLoginUrl(redirectUrl, scope);
+                using (var tabProcess = Process.Start(redirectUrl))
                 {
-                    var task = redirectListener.GetContextAsync();
-                    var timeoutTask = (cancelToken != null) ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
-                    var anytask = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
-                    if (anytask == task)
+                    for (var times = 0; times < 2; times++)
                     {
-                        await ProcessRedirect(await task, redirectUrl).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        if (timeoutTask.IsCanceled)
+                        var task = redirectListener.GetContextAsync();
+                        var timeoutTask = (cancelToken != null) ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
+                        var anytask = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
+                        if (anytask == task)
                         {
-                            return false;
+                            var context = await task;
+                            if (times == 0)
+                            {
+                                var loginResponse = Encoding.UTF8.GetBytes(string.Format(DefaultOpenAuthResponse, loginurl));
+                                await SendResponse(context.Response, loginResponse).ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                await ProcessRedirect(context, redirectUrl).ConfigureAwait(false);
+                            }
                         }
+                        else
+                        {
+                            if (timeoutTask.IsCanceled)
+                            {
+                                return false;
+                            }
 
-                        throw new TimeoutException("No redirection detected");
+                            throw new TimeoutException("No redirection detected");
+                        }
                     }
                 }
             }
@@ -267,7 +282,7 @@ namespace Azi.Amazon.CloudDrive
 
             var code = HttpUtility.ParseQueryString(context.Request.Url.Query).Get("code");
 
-            await SendRedirectResponse(context.Response).ConfigureAwait(false);
+            await SendResponse(context.Response, CloseTabResponse).ConfigureAwait(false);
 
             await AuthenticationByCode(code, redirectUrl).ConfigureAwait(false);
         }
@@ -278,11 +293,11 @@ namespace Azi.Amazon.CloudDrive
             return true;
         }
 
-        private async Task SendRedirectResponse(HttpListenerResponse response)
+        private async Task SendResponse(HttpListenerResponse response, byte[] body)
         {
             response.StatusCode = 200;
-            response.ContentLength64 = CloseTabResponse.Length;
-            await response.OutputStream.WriteAsync(CloseTabResponse, 0, CloseTabResponse.Length).ConfigureAwait(false);
+            response.ContentLength64 = body.Length;
+            await response.OutputStream.WriteAsync(body, 0, body.Length).ConfigureAwait(false);
             response.OutputStream.Close();
         }
 

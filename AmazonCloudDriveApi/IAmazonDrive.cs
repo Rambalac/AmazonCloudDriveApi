@@ -66,7 +66,7 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="scope">Your Application scope to access cloud</param>
         /// <param name="timeout">How long lister will wait for redirect before throw TimeoutException</param>
         /// <param name="cancelToken">Cancellation for authentication. Can be null.</param>
-        /// <param name="unformatedRedirectUrl">URL to redirect to after authentication. Use {0} for port substitute. Must be registered with exact ports in Amazon Developers Console.</param>
+        /// <param name="unformatedRedirectUrl">URL to redirect to after authentication. To intercept redirect you need to redirect to local PC address. Use {0} for port substitute. Must be registered with exact ports in Amazon Developers Console.</param>
         /// <param name="portSelector">Func to select port for redirect listener.
         /// portSelector(int lastPort, int time) where lastPost is port used last time and
         /// time is number of times selector was called before. To abort port selection throw exception other than HttpListenerException</param>
