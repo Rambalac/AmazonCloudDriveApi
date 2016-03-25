@@ -1,5 +1,7 @@
 ﻿using Xunit;
 using System.Threading.Tasks;
+using System.Linq;
+using System.IO;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
@@ -16,7 +18,11 @@ namespace Azi.Amazon.CloudDrive.Tests
         [Fact]
         public async Task GetNodeExtendedTest()
         {
-            var node = await Amazon.Nodes.GetNodeExtended("kqt2jeqTSnKQawvSXo3WiA");
+            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFile = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+
+            var node = await Amazon.Nodes.GetNodeExtended(testFile.id);
+            Assert.NotNull(node.tempLink);
         }
 
         [Fact]
