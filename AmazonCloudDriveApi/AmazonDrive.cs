@@ -289,7 +289,7 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task<bool> ProcessUnauthorized(HttpStatusCode arg)
         {
-            await UpdateToken();
+            await UpdateToken().ConfigureAwait(false);
             return true;
         }
 

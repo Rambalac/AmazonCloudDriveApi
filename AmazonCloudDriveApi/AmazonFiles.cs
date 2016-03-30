@@ -66,7 +66,7 @@ namespace Azi.Amazon.CloudDrive
                 AllowDuplicate = allowDuplicate,
                 FileName = fileName,
                 StreamOpener = streamOpener
-            });
+            }).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>

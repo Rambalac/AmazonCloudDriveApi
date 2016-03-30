@@ -34,6 +34,12 @@
     <DocumentationFile>bin\Release\AmazonCloudDriveApi.XML</DocumentationFile>
     <CodeAnalysisRuleSet>AmazonCloudDriveApi.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>ACDDokanNet.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -82,6 +88,7 @@
     <Compile Include="SendFileInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ACDDokanNet.pfx" />
     <None Include="AmazonCloudDriveApi.ruleset" />
     <None Include="App.config" />
     <None Include="packages.config">

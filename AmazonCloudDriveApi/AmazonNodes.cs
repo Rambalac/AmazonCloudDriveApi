@@ -131,7 +131,7 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         async Task<AmazonNode> IAmazonNodes.GetRoot()
         {
-            return await GetRoot();
+            return await GetRoot().ConfigureAwait(false);
         }
 
         /// <inheritdoc/>

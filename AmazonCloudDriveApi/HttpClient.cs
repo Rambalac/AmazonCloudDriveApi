@@ -41,7 +41,7 @@ namespace Azi.Tools
         /// Add Http error processor
         /// </summary>
         /// <param name="code">Http status</param>
-        /// <param name="func">func to return true if request should be retried</param>
+        /// <param name="func">func to return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.</param>
         public void AddRetryErrorProcessor(HttpStatusCode code, Func<HttpStatusCode, Task<bool>> func)
         {
             retryErrorProcessor[(int)code] = new WeakReference<Func<HttpStatusCode, Task<bool>>>(func);
@@ -555,7 +555,7 @@ namespace Azi.Tools
                         {
                             if (func != null)
                             {
-                                if (await func(webresp.StatusCode))
+                                if (await func(webresp.StatusCode).ConfigureAwait(false))
                                 {
                                     return false;
                                 }

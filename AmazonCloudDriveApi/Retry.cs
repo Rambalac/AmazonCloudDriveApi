@@ -86,7 +86,7 @@ namespace Azi.Tools
                 }
                 catch (Exception ex)
                 {
-                    if (await exceptionPocessor(ex))
+                    if (await exceptionPocessor(ex).ConfigureAwait(false))
                     {
                         return false;
                     }
