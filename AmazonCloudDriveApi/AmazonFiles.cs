@@ -2,19 +2,18 @@
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Azi.Amazon.CloudDrive.JsonObjects;
-using Azi.Tools;
-using Newtonsoft.Json;
-using System.Threading;
-
 namespace Azi.Amazon.CloudDrive
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Net;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using JsonObjects;
+    using Newtonsoft.Json;
+    using Tools;
 
     /// <summary>
     /// Part to work with file upload and download

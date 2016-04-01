@@ -148,8 +148,7 @@ namespace Azi.Tools
                         {
                             client.AddRange((long)fileOffset, (long)(fileOffset + length - 1));
                         }
-                        else
-                            if (fileOffset != null && length == null)
+                        else if (fileOffset != null && length == null)
                         {
                             client.AddRange((long)fileOffset);
                         }
@@ -453,14 +452,14 @@ namespace Azi.Tools
         {
             var buffer = new byte[info.BufferSize];
             int bytesRead;
-            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
             {
                 if (info.CancellationToken != null && info.CancellationToken.Value.IsCancellationRequested)
                 {
                     throw new TaskCanceledException();
                 }
 
-                await destination.WriteAsync(buffer, 0, bytesRead);
+                await destination.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
                 state.Pos += bytesRead;
                 if (info.Progress != null && state.Pos >= state.NextPos)
                 {

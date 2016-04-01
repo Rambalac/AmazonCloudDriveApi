@@ -2,16 +2,16 @@
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.Diagnostics.Contracts;
-
 namespace Azi.Tools
 {
+    using System.Diagnostics.Contracts;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http.Headers;
+    using System.Threading.Tasks;
+    using Newtonsoft.Json;
+
     /// <summary>
     /// Helper methods to work with Http protocol
     /// </summary>

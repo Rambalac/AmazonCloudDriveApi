@@ -41,9 +41,9 @@ namespace Azi.Amazon.CloudDrive
 
         private static readonly string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>start";
 
-        private readonly HttpClient http;
-
         private static RequestCachePolicy standartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
+
+        private readonly HttpClient http;
 
         private string clientId;
         private string clientSecret;
@@ -67,7 +67,7 @@ namespace Azi.Amazon.CloudDrive
             http.AddRetryErrorProcessor(HttpStatusCode.Unauthorized, ProcessUnauthorized);
             http.AddRetryErrorProcessor(429, async (code) =>
                 {
-                    await Task.Delay(1000);
+                    await Task.Delay(1000).ConfigureAwait(false);
                     return true;
                 });
         }
@@ -160,7 +160,7 @@ namespace Azi.Amazon.CloudDrive
                         var anytask = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
                         if (anytask == task)
                         {
-                            var context = await task;
+                            var context = await task.ConfigureAwait(false);
                             if (times == 0)
                             {
                                 var loginResponse = Encoding.UTF8.GetBytes(string.Format(DefaultOpenAuthResponse, loginurl));

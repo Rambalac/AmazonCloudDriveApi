@@ -11,7 +11,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         {
             var amazon = new AmazonDrive(AmazonSecret.ClientId, AmazonSecret.ClientSecret);
 
-            var result = await amazon.AuthenticationByExternalBrowser(CloudDriveScopes.ReadAll | CloudDriveScopes.Write, TimeSpan.FromMinutes(1));
+            var result = await amazon.AuthenticationByExternalBrowser(CloudDriveScopes.ReadAll | CloudDriveScopes.Write, TimeSpan.FromMinutes(1)).ConfigureAwait(false);
             Assert.True(result);
         }
 
