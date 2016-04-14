@@ -337,7 +337,7 @@ namespace Azi.Tools
         /// <typeparam name="R">Result type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="url">URL for request</param>
-        /// <param name="file">File upload parameters</param>
+        /// <param name="file">File upload parameters. Input stream must support Length</param>
         /// <returns>Async result object</returns>
         public async Task<R> SendFile<R>(HttpMethod method, string url, SendFileInfo file)
         {
@@ -348,36 +348,44 @@ namespace Azi.Tools
                 async () =>
                     {
                         var client = await GetHttpClient(url).ConfigureAwait(false);
-                        client.Method = method.ToString();
-                        client.AllowWriteStreamBuffering = false;
-
-                        string boundry = Guid.NewGuid().ToString();
-                        client.ContentType = $"multipart/form-data; boundary={boundry}";
-                        client.SendChunked = true;
-
-                        using (var input = file.StreamOpener())
+                        try
                         {
-                            var pre = GetMultipartFormPre(file, input.Length, boundry);
-                            var post = GetMultipartFormPost(boundry);
-                            client.ContentLength = pre.Length + input.Length + post.Length;
-                            using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
-                            {
-                                var state = new CopyStreamState();
-                                await CopyStreams(pre, output, file, state).ConfigureAwait(false);
-                                await CopyStreams(input, output, file, state).ConfigureAwait(false);
-                                await CopyStreams(post, output, file, state).ConfigureAwait(false);
-                            }
-                        }
-                        using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
-                        {
-                            if (!response.IsSuccessStatusCode())
-                            {
-                                return await LogBadResponse(response).ConfigureAwait(false);
-                            }
+                            client.Method = method.ToString();
+                            client.AllowWriteStreamBuffering = false;
 
-                            result = await response.ReadAsAsync<R>().ConfigureAwait(false);
+                            string boundry = Guid.NewGuid().ToString();
+                            client.ContentType = $"multipart/form-data; boundary={boundry}";
+                            client.SendChunked = true;
+
+                            using (var input = file.StreamOpener())
+                            {
+                                var pre = GetMultipartFormPre(file, input.Length, boundry);
+                                var post = GetMultipartFormPost(boundry);
+                                client.ContentLength = pre.Length + input.Length + post.Length;
+                                using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
+                                {
+                                    var state = new CopyStreamState();
+                                    await CopyStreams(pre, output, file, state).ConfigureAwait(false);
+                                    await CopyStreams(input, output, file, state).ConfigureAwait(false);
+                                    await CopyStreams(post, output, file, state).ConfigureAwait(false);
+                                }
+                            }
+                            using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
+                            {
+                                if (!response.IsSuccessStatusCode())
+                                {
+                                    return await LogBadResponse(response).ConfigureAwait(false);
+                                }
+
+                                result = await response.ReadAsAsync<R>().ConfigureAwait(false);
+                            }
+                            return true;
                         }
-                        return true;
+                        catch (Exception)
+                        {
+                            client.Abort();
+                            throw;
+                        }
                     },
                 GeneralExceptionProcessor).ConfigureAwait(false);
             return result;
