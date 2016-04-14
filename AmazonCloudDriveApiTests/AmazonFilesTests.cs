@@ -44,6 +44,19 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.Equal(testFileContent, memStr.ToArray());
         }
 
+        [Fact(Skip ="API does not support zero length")]
+        public async Task UploadZeroLengthTest()
+        {
+            var testFileContent = new byte[0];
+            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+            Assert.Equal(0, testFile.Length);
+
+            var memStr = new MemoryStream();
+            await Amazon.Files.Download(testFile.id, memStr);
+
+            Assert.Equal(testFileContent, memStr.ToArray());
+        }
+
         [Fact]
         public async Task UploadNewCancallationTest()
         {

@@ -31,10 +31,23 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.True(false, "This test needs an implementation");
         }
 
-        [Fact]
-        public void GetChildTest()
+        [Theory]
+        [InlineData("test&file.txt")]
+        [InlineData("test%file.txt")]
+        [InlineData("t&.txt")]
+        [InlineData("t%.txt")]
+
+        public async Task GetChildTest(string name)
         {
-            Assert.True(false, "This test needs an implementation");
+            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFile = await Amazon.Files.UploadNew(TestDirId, name, () => new MemoryStream(testFileContent));
+
+            await Task.Delay(1000);
+
+            var node = await Amazon.Nodes.GetChild(TestDirId, name);
+
+            Assert.Equal(testFile.id, node.id);
+            Assert.Equal(name, node.name);
         }
 
         [Fact]
