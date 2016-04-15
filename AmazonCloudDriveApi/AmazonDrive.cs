@@ -323,20 +323,26 @@ namespace Azi.Amazon.CloudDrive
         private async Task UpdateToken()
         {
             updatingToken = true;
-            var form = new Dictionary<string, string>
+            try
+            {
+                var form = new Dictionary<string, string>
                     {
                         { "grant_type", "refresh_token" },
                         { "refresh_token", token.refresh_token },
                         { "client_id", clientId },
                         { "client_secret", clientSecret }
                     };
-            token = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
-            if (token != null)
-            {
-                CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+                var newtoken = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
+                if (newtoken != null)
+                {
+                    token = newtoken;
+                    CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+                }
             }
-
-            updatingToken = false;
+            finally
+            {
+                updatingToken = false;
+            }
         }
     }
 }
