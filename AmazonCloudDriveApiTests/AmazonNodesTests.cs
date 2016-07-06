@@ -18,7 +18,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [Fact]
         public async Task GetNodeExtendedTest()
         {
-            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
 
             var node = await Amazon.Nodes.GetNodeExtended(testFile.id);
@@ -39,7 +39,7 @@ namespace Azi.Amazon.CloudDrive.Tests
 
         public async Task GetChildTest(string name)
         {
-            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, name, () => new MemoryStream(testFileContent));
 
             await Task.Delay(1000);

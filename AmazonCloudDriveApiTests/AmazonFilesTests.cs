@@ -34,7 +34,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [InlineData("t%.txt")]
         public async Task UploadNameTest(string testName)
         {
-            byte[] testFileContent = Enumerable.Range(1, 100).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 100).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, testName, () => new MemoryStream(testFileContent));
             Assert.Equal(testName, testFile.name);
 
@@ -60,7 +60,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [Fact]
         public async Task UploadNewCancallationTest()
         {
-            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var token = new CancellationTokenSource();
             token.Cancel();
 
@@ -78,7 +78,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [Fact]
         public async Task UploadNewProgressTest()
         {
-            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             int totalProgressCalls = 0;
             var fileUpload = new FileUpload
             {
@@ -102,7 +102,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [Fact]
         public async Task DownloadWithProgressCancelTest()
         {
-            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
 
             var memStr = new MemoryStream();
@@ -119,7 +119,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [Fact]
         public async Task DownloadWithProgressTest()
         {
-            byte[] testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
 
             var memStr = new MemoryStream();

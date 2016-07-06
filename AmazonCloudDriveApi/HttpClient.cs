@@ -353,7 +353,7 @@ namespace Azi.Tools
                             client.Method = method.ToString();
                             client.AllowWriteStreamBuffering = false;
 
-                            string boundry = Guid.NewGuid().ToString();
+                            var boundry = Guid.NewGuid().ToString();
                             client.ContentType = $"multipart/form-data; boundary={boundry}";
                             client.SendChunked = true;
 

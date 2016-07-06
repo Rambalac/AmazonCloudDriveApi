@@ -39,7 +39,7 @@ namespace Azi.Amazon.CloudDrive
 
         private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.close;</SCRIPT>You can close this tab");
 
-        private static readonly string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>start";
+        private static readonly string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>Please, allow popups if they got blocked";
 
         private static RequestCachePolicy standartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
 
@@ -50,9 +50,9 @@ namespace Azi.Amazon.CloudDrive
 
         private AuthToken token;
 
-        private bool updatingToken = false;
+        private bool updatingToken;
 
-        private WeakReference<ITokenUpdateListener> weakOnTokenUpdate = null;
+        private WeakReference<ITokenUpdateListener> weakOnTokenUpdate;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AmazonDrive"/> class.

@@ -78,7 +78,7 @@ namespace Azi.Amazon.CloudDrive
             }
 
             var obj = new NewChild { name = fileUpload.FileName, parents = new string[] { fileUpload.ParentId }, kind = "FILE" };
-            string meta = JsonConvert.SerializeObject(obj);
+            var meta = JsonConvert.SerializeObject(obj);
 
             var file = new SendFileInfo
             {
