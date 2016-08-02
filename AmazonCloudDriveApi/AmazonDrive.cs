@@ -21,7 +21,7 @@ namespace Azi.Amazon.CloudDrive
     /// <summary>
     /// Root class for Amazon Cloud Drive API
     /// </summary>
-    public sealed partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive
+    public sealed partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive, IAmazonProfile
     {
         private const string LoginUrlBase = "https://www.amazon.com/ap/oa";
         private const string TokenUrl = "https://api.amazon.com/auth/o2/token";
@@ -34,7 +34,10 @@ namespace Azi.Amazon.CloudDrive
             { CloudDriveScopes.ReadDocument, "clouddrive:read_document" },
             { CloudDriveScopes.ReadOther, "clouddrive:read_other" },
             { CloudDriveScopes.ReadAll, "clouddrive:read_all" },
-            { CloudDriveScopes.Write, "clouddrive:write" }
+            { CloudDriveScopes.Write, "clouddrive:write" },
+            { CloudDriveScopes.Profile, "profile" },
+            { CloudDriveScopes.Profile_UserIdOnly, "profile:user_id" },
+            { CloudDriveScopes.Profile_PostalCode, "postal_code" },
         };
 
         private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.close;</SCRIPT>You can close this tab");
@@ -83,6 +86,9 @@ namespace Azi.Amazon.CloudDrive
 
         /// <inheritdoc/>
         public IAmazonNodes Nodes => this;
+
+        /// <inheritdoc/>
+        public IAmazonProfile Profile => this;
 
         /// <inheritdoc/>
         public ITokenUpdateListener OnTokenUpdate

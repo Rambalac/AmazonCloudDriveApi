@@ -60,6 +60,7 @@
     <Compile Include="AmazonDrive.cs" />
     <Compile Include="AmazonFiles.cs" />
     <Compile Include="AmazonNodes.cs" />
+    <Compile Include="AmazonProfile.cs" />
     <Compile Include="CloudDriveScope.cs" />
     <Compile Include="FileUpload.cs" />
     <Compile Include="HttpClient.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="IAmazonDrive.cs" />
     <Compile Include="IAmazonFiles.cs" />
     <Compile Include="IAmazonNodes.cs" />
+    <Compile Include="IAmazonProfile.cs" />
     <Compile Include="ITokenUpdateListener.cs" />
     <Compile Include="JsonObjects\AmazonNode.cs" />
     <Compile Include="JsonObjects\AmazonNodeImage.cs" />
@@ -80,6 +82,7 @@
     <Compile Include="JsonObjects\Endpoint.cs" />
     <Compile Include="JsonObjects\Image.cs" />
     <Compile Include="JsonObjects\NewChild.cs" />
+    <Compile Include="JsonObjects\Profile.cs" />
     <Compile Include="JsonObjects\Quota.cs" />
     <Compile Include="JsonObjects\TotalAndBillable.cs" />
     <Compile Include="JsonObjects\Usage.cs" />

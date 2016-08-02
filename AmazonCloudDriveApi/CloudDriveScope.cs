@@ -40,6 +40,21 @@ namespace Azi.Amazon.CloudDrive
         /// <summary>
         /// Upload files
         /// </summary>
-        Write = 32
+        Write = 32,
+
+        /// <summary>
+        /// Profile: name, email and profile_id
+        /// </summary>
+        Profile = 64,
+
+        /// <summary>
+        /// Profile: user_id only
+        /// </summary>
+        Profile_UserIdOnly = 128,
+
+        /// <summary>
+        /// Profile: postal code in addition to <see cref="Profile" /> or <see cref="Profile_UserIdOnly"/>
+        /// </summary>
+        Profile_PostalCode = 256,
     }
 }
