@@ -63,6 +63,7 @@
     <Compile Include="AmazonDriveTests.cs" />
     <Compile Include="AmazonFilesTests.cs" />
     <Compile Include="AmazonNodesTests.cs" />
+    <Compile Include="AmazonProfileTests.cs" />
     <Compile Include="AmazonSecret.cs" />
     <Compile Include="AmazonTestsBase.cs" />
     <Compile Include="GlobalSuppressions.cs" />

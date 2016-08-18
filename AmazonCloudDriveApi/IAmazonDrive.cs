@@ -24,6 +24,11 @@ namespace Azi.Amazon.CloudDrive
         IAmazonFiles Files { get; }
 
         /// <summary>
+        /// Gets profile details of current user
+        /// </summary>
+        IAmazonProfile Profile { get; }
+
+        /// <summary>
         /// Gets or sets start of 3 ports range used in localhost redirect listener for authentication with default port selector
         /// </summary>
         int ListenerPortStart { get; set; }
