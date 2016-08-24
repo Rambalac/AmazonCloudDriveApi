@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,6 +43,11 @@ namespace Azi.Amazon.CloudDrive
         /// Gets or sets byte array with response for redirection from authentication page
         /// </summary>
         byte[] CloseTabResponse { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Proxy that should be used to perform requests to Amazon Drive
+        /// </summary>
+        IWebProxy Proxy { get; set; }
 
         /// <summary>
         /// Sets callback called when authentication token get updated on authentication or renewal. Using WeakReference

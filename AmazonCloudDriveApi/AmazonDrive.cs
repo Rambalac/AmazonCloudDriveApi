@@ -103,6 +103,9 @@ namespace Azi.Amazon.CloudDrive
         public byte[] CloseTabResponse { get; set; } = DefaultCloseTabResponse;
 
         /// <inheritdoc/>
+        public IWebProxy Proxy { get; set; }
+
+        /// <inheritdoc/>
         public async Task<bool> AuthenticationByTokens(string authToken, string authRenewToken, DateTime authTokenExpiration)
         {
             token = new AuthToken
@@ -324,6 +327,11 @@ namespace Azi.Amazon.CloudDrive
             client.AutomaticDecompression = DecompressionMethods.GZip;
             client.PreAuthenticate = true;
             client.UseDefaultCredentials = true;
+
+            if (Proxy != null)
+            {
+                client.Proxy = Proxy;
+            }
         }
 
         private async Task UpdateToken()
