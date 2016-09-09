@@ -17,6 +17,5 @@ namespace Azi.Amazon.CloudDrive
         /// </summary>
         /// <returns>Profile info</returns>
         Task<Profile> GetProfile();
-
     }
 }
