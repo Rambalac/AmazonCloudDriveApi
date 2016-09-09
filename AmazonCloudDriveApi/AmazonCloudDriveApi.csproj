@@ -38,7 +38,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>CloudHold.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>LibraryKyeFile.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -93,7 +93,7 @@
   <ItemGroup>
     <None Include="AmazonCloudDriveApi.ruleset" />
     <None Include="App.config" />
-    <None Include="CloudHold.pfx" />
+    <None Include="LibraryKyeFile.pfx" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
