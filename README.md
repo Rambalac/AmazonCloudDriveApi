@@ -2,6 +2,8 @@ Amazon Cloud Drive Api for .NET
 ===============================
 General implementation of REST API for Amazon Cloud Drive. Not all functions are implemented, but it can download/upload files and organize files/folders.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/wigge25onobhd31j/branch/master?svg=true)](https://ci.appveyor.com/project/Rambalac/amazonclouddriveapi/branch/master)
+
 Nuget
 -----
 You can find nuget package with name ```AmazonCloudDriveApi```
