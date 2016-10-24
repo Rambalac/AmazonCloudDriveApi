@@ -91,6 +91,7 @@
     <Compile Include="SendFileInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AmazonCloudDriveApi.nuspec" />
     <None Include="AmazonCloudDriveApi.ruleset" />
     <None Include="App.config" />
     <None Include="LibraryKeyFile.pfx" />

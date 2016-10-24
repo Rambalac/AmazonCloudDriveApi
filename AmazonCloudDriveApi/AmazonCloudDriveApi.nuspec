@@ -3,16 +3,16 @@
   <metadata>
     <id>AmazonCloudDriveApi</id>
 
-	<version>$version$</version>
-	<authors>$author$</authors>
-	
+  <version>$version$</version>
+  <authors>$author$</authors>
+  
     <description>$description$</description>
     <title>Amazon Cloud Drive API</title>
     <owners>Rambalac</owners>
     <summary>Amazon Cloud Drive API</summary>
     <projectUrl>https://github.com/Rambalac/AmazonCloudDriveApi</projectUrl>
     <licenseUrl>https://raw.githubusercontent.com/Rambalac/AmazonCloudDriveApi/master/license.txt</licenseUrl>
-    <copyright>Copyright © Rambalac</copyright>
+    <copyright>Rambalac</copyright>
     <tags>Amazon CloudDrive REST Cloud</tags>
   </metadata>
 </package>

@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Rambalac, Kyrodan, saguiitay")]
 [assembly: AssemblyProduct("Azi.Amazon.CloudDrive")]
-[assembly: AssemblyCopyright("Copyright © Rambalac 2015")]
+[assembly: AssemblyCopyright("Rambalac")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("en-US")]
 
