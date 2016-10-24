@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>AmazonCloudDriveApi</id>
+    <description>General implementation of REST API for Amazon Cloud Drive. Not all functions are implemented, but it can download/upload files and organize files/folders</description>
+    <title>Amazon Cloud Drive API</title>
+    <owners>Rambalac</owners>
+    <summary>Amazon Cloud Drive API</summary>
+    <projectUrl>https://github.com/Rambalac/AmazonCloudDriveApi</projectUrl>
+    <licenseUrl>https://raw.githubusercontent.com/Rambalac/AmazonCloudDriveApi/master/license.txt</licenseUrl>
+    <copyright>Copyright © Rambalac</copyright>
+    <tags>Amazon CloudDrive REST Cloud</tags>
+  </metadata>
+</package>
