@@ -6,7 +6,7 @@ namespace Azi.Amazon.CloudDrive.Tests
 {
     public class AmazonDriveTests
     {
-        [Fact(Skip = "Not automatic")]
+        [Fact]
         public async Task AuthenticationByExternalBrowserTest()
         {
             var amazon = new AmazonDrive(AmazonSecret.ClientId, AmazonSecret.ClientSecret);
