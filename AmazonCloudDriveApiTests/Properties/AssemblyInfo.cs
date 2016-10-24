@@ -8,14 +8,14 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AmazonCloudDriveApiTests")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Amazon Cloud Drive API")]
+[assembly: AssemblyDescription("General implementation of REST API for Amazon Cloud Drive. Not all functions are implemented, but it can download/upload files and organize files/folders")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("AmazonCloudDriveApiTests")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCompany("Rambalac, Kyrodan, saguiitay")]
+[assembly: AssemblyProduct("Azi.Amazon.CloudDrive")]
+[assembly: AssemblyCopyright("Copyright © Rambalac 2015")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyCulture("en-US")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
