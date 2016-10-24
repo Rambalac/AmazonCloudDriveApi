@@ -38,7 +38,8 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>LibraryKeyFile.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -94,7 +95,7 @@
     <None Include="AmazonCloudDriveApi.nuspec" />
     <None Include="AmazonCloudDriveApi.ruleset" />
     <None Include="App.config" />
-    <None Include="LibraryKeyFile.pfx" />
+    <None Include="mykey.pfx" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
