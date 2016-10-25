@@ -41,7 +41,8 @@ namespace Azi.Tools
         /// Add Http error processor
         /// </summary>
         /// <param name="code">Http status</param>
-        /// <param name="func">func to return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.</param>
+        /// <param name="func">func to return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.
+        /// Do not use method reference, use lamda or lamda with method call istead</param>
         public void AddRetryErrorProcessor(HttpStatusCode code, Func<HttpStatusCode, Task<bool>> func)
         {
             retryErrorProcessor[(int)code] = new WeakReference<Func<HttpStatusCode, Task<bool>>>(func);
@@ -51,7 +52,8 @@ namespace Azi.Tools
         /// Add Http error processor
         /// </summary>
         /// <param name="code">Http status code</param>
-        /// <param name="func">func to return true if request should be retried</param>
+        /// <param name="func">func to return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.
+        /// Do not use method reference, use lamda or lamda with method call istead</param>
         public void AddRetryErrorProcessor(int code, Func<HttpStatusCode, Task<bool>> func)
         {
             retryErrorProcessor[code] = new WeakReference<Func<HttpStatusCode, Task<bool>>>(func);
@@ -567,6 +569,10 @@ namespace Azi.Tools
                                     return false;
                                 }
                             }
+                        }
+                        else
+                        {
+                            throw new NullReferenceException($"RetryErrorProcessor does not exist as it got out of scope and lost weak references: {webresp.StatusCode}");
                         }
                     }
 

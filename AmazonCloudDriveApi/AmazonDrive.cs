@@ -66,13 +66,18 @@ namespace Azi.Amazon.CloudDrive
         {
             this.clientSecret = clientSecret;
             this.clientId = clientId;
-            http = new Tools.HttpClient(SettingsSetter);
-            http.AddRetryErrorProcessor(HttpStatusCode.Unauthorized, ProcessUnauthorized);
+            http = new HttpClient(SettingsSetter);
+            http.AddRetryErrorProcessor(HttpStatusCode.Unauthorized, async (code) =>
+            {
+                await UpdateToken().ConfigureAwait(false);
+                return true;
+            });
             http.AddRetryErrorProcessor(429, async (code) =>
-                {
-                    await Task.Delay(1000).ConfigureAwait(false);
-                    return true;
-                });
+            {
+                await Task.Delay(1000).ConfigureAwait(false);
+                return true;
+            });
+            http.AddRetryErrorProcessor(HttpStatusCode.NotFound, (code) => Task.FromResult(false));
         }
 
         /// <inheritdoc/>
@@ -294,12 +299,6 @@ namespace Azi.Amazon.CloudDrive
             await SendResponse(context.Response, CloseTabResponse).ConfigureAwait(false);
 
             await AuthenticationByCode(code, redirectUrl).ConfigureAwait(false);
-        }
-
-        private async Task<bool> ProcessUnauthorized(HttpStatusCode arg)
-        {
-            await UpdateToken().ConfigureAwait(false);
-            return true;
         }
 
         private async Task SendResponse(HttpListenerResponse response, byte[] body)
