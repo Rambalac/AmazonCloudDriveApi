@@ -243,7 +243,7 @@ namespace Azi.Amazon.CloudDrive
                 {
                     // Skip, try another port
                 }
-                catch (InvalidOperationException)
+                catch (Exception)
                 {
                     listener.Close();
                     throw;
