@@ -22,7 +22,7 @@ namespace Azi.Tools
         private const int RetryTimes = 100;
 
         private static readonly HashSet<HttpStatusCode> RetryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
-        private readonly Dictionary<int, WeakReference<Func<HttpStatusCode, Task<bool>>>> retryErrorProcessor = new Dictionary<int, WeakReference<Func<HttpStatusCode, Task<bool>>>>();
+        private readonly Dictionary<int, Func<HttpStatusCode, Task<bool>>> retryErrorProcessor = new Dictionary<int, Func<HttpStatusCode, Task<bool>>>();
         private readonly Func<HttpWebRequest, Task> settingsSetter;
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Azi.Tools
         /// Do not use method reference, use lamda or lamda with method call istead</param>
         public void AddRetryErrorProcessor(HttpStatusCode code, Func<HttpStatusCode, Task<bool>> func)
         {
-            retryErrorProcessor[(int)code] = new WeakReference<Func<HttpStatusCode, Task<bool>>>(func);
+            retryErrorProcessor[(int)code] = func;
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Azi.Tools
         /// Do not use method reference, use lamda or lamda with method call istead</param>
         public void AddRetryErrorProcessor(int code, Func<HttpStatusCode, Task<bool>> func)
         {
-            retryErrorProcessor[code] = new WeakReference<Func<HttpStatusCode, Task<bool>>>(func);
+            retryErrorProcessor[code] = func;
         }
 
         /// <summary>
@@ -556,23 +556,15 @@ namespace Azi.Tools
                         return false;
                     }
 
-                    WeakReference<Func<HttpStatusCode, Task<bool>>> weakfunc;
                     Func<HttpStatusCode, Task<bool>> func;
-                    if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out weakfunc))
+                    if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out func))
                     {
-                        if (weakfunc.TryGetTarget(out func))
+                        if (func != null)
                         {
-                            if (func != null)
+                            if (await func(webresp.StatusCode).ConfigureAwait(false))
                             {
-                                if (await func(webresp.StatusCode).ConfigureAwait(false))
-                                {
-                                    return false;
-                                }
+                                return false;
                             }
-                        }
-                        else
-                        {
-                            throw new NullReferenceException($"RetryErrorProcessor does not exist as it got out of scope and lost weak references: {webresp.StatusCode}");
                         }
                     }
 
