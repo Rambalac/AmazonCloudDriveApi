@@ -17,6 +17,13 @@ namespace Azi.Amazon.CloudDrive
     public interface IAmazonFiles
     {
         /// <summary>
+        /// Creates Stream to downloads file. Stream supports seeking reopening Http stream.
+        /// </summary>
+        /// <param name="id">File id to download.</param>
+        /// <returns>Stream for file</returns>
+        Task<Stream> Download(string id);
+
+        /// <summary>
         /// Downloads file with low level response processor
         /// </summary>
         /// <param name="id">File id to download.</param>

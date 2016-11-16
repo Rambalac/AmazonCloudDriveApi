@@ -128,21 +128,37 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.Equal(testFileContent, memStr.ToArray());
         }
 
+        [Fact]
+        public async Task DownloadWithSeekableStreamTest()
+        {
+            var testFileContent = Enumerable.Range(0, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+
+            var stream=await Amazon.Files.Download(testFile.id);
+
+            var testBuf = new byte[100];
+            stream.Position = 100;
+            await stream.ReadAsync(testBuf, 0, testBuf.Length);
+
+            Assert.Equal(Enumerable.Range(100, 100).Select(i => (byte)(i & 255)).ToArray(), testBuf);
+
+            testBuf = new byte[300];
+            stream.Position = 500;
+            await stream.ReadAsync(testBuf, 0, testBuf.Length);
+
+            Assert.Equal(Enumerable.Range(500, 300).Select(i => (byte)(i & 255)).ToArray(), testBuf);
+
+            testBuf = new byte[100];
+            stream.Position = 50;
+            await stream.ReadAsync(testBuf, 0, 50);
+            await stream.ReadAsync(testBuf, 50, 50);
+
+            Assert.Equal(Enumerable.Range(50, 100).Select(i => (byte)(i & 255)).ToArray(), testBuf);
+        }
+
         private long Progress1(long arg)
         {
             return arg + 10;
-        }
-
-        [Fact]
-        public void DownloadTest1()
-        {
-            Assert.True(false, "This test needs an implementation");
-        }
-
-        [Fact]
-        public void DownloadTest2()
-        {
-            Assert.True(false, "This test needs an implementation");
         }
     }
 }

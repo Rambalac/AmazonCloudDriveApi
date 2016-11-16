@@ -21,6 +21,13 @@ namespace Azi.Amazon.CloudDrive
     public partial class AmazonDrive
     {
         /// <inheritdoc/>
+        async Task<Stream> IAmazonFiles.Download(string id)
+        {
+            var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
+            return new DownloadStream(http, url);
+        }
+
+        /// <inheritdoc/>
         async Task IAmazonFiles.Download(string id, Stream stream, long? fileOffset, long? length, int bufferSize, Func<long, long> progress)
         {
             var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);

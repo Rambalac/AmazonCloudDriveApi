@@ -73,6 +73,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="SendFileInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

@@ -60,6 +60,19 @@ namespace Azi.Tools
         }
 
         /// <summary>
+        /// Returns configured raw HttpWebRequest
+        /// </summary>
+        /// <param name="url">Request URL</param>
+        /// <returns>HttpWebRequest</returns>
+        public async Task<HttpWebRequest> GetHttpClient(string url)
+        {
+            var result = (HttpWebRequest)WebRequest.Create(url);
+
+            await settingsSetter(result).ConfigureAwait(false);
+            return result;
+        }
+
+        /// <summary>
         /// Sends GET request and parses response as JSON
         /// </summary>
         /// <typeparam name="T">type or response</typeparam>
@@ -435,29 +448,6 @@ namespace Azi.Tools
             return result;
         }
 
-        private static T SearchForException<T>(Exception ex, int depth = 3)
-            where T : class
-        {
-            T res = null;
-            var cur = ex;
-            for (int i = 0; i < depth; i++)
-            {
-                res = cur as T;
-                if (res != null)
-                {
-                    return res;
-                }
-
-                cur = ex.InnerException;
-                if (cur == null)
-                {
-                    return null;
-                }
-            }
-
-            return null;
-        }
-
         private static async Task CopyStreams(Stream source, Stream destination, SendFileInfo info, CopyStreamState state)
         {
             var buffer = new byte[info.BufferSize];
@@ -538,6 +528,29 @@ namespace Azi.Tools
             return TimeSpan.FromSeconds(1 << time);
         }
 
+        private static T SearchForException<T>(Exception ex, int depth = 3)
+                                                    where T : class
+        {
+            T res = null;
+            var cur = ex;
+            for (int i = 0; i < depth; i++)
+            {
+                res = cur as T;
+                if (res != null)
+                {
+                    return res;
+                }
+
+                cur = ex.InnerException;
+                if (cur == null)
+                {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
         private async Task<bool> GeneralExceptionProcessor(Exception ex)
         {
             if (ex is TaskCanceledException)
@@ -575,19 +588,11 @@ namespace Azi.Tools
             throw ex;
         }
 
-        private async Task<HttpWebRequest> GetHttpClient(string url)
-        {
-            var result = (HttpWebRequest)WebRequest.Create(url);
-
-            await settingsSetter(result).ConfigureAwait(false);
-            return result;
-        }
-
         private class CopyStreamState
         {
-            public long Pos { get; set; } = 0;
-
             public long NextPos { get; set; } = -1;
+
+            public long Pos { get; set; } = 0;
         }
     }
 }

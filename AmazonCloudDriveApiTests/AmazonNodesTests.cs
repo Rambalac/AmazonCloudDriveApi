@@ -37,6 +37,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         [InlineData("t&.txt")]
         [InlineData("t%.txt")]
 
+        [Fact]
         public async Task GetChildTest(string name)
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
