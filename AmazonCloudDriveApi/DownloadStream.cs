@@ -104,46 +104,60 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            if (position != lastposition || responseStream == null)
-            {
-                try
+            int? result = null;
+            await Retry.Do(
+                HttpClient.RetryTimes,
+                HttpClient.RetryDelay,
+                async () =>
                 {
-                    if (position != lastposition)
+                    try
+                    {
+                        if (position != lastposition || responseStream == null)
+                        {
+                            if (position != lastposition)
+                            {
+                                Close();
+                            }
+
+                            lastposition = position;
+
+                            var client = await http.GetHttpClient(url).ConfigureAwait(false);
+                            if (position != 0)
+                            {
+                                client.AddRange(position);
+                            }
+
+                            client.Method = "GET";
+
+                            response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false);
+                            var lengthStr = response.GetResponseHeader("Content-Length");
+                            long len;
+                            if (long.TryParse(lengthStr, out len))
+                            {
+                                length = position + len;
+                            }
+
+                            responseStream = response.GetResponseStream();
+                        }
+
+                        result = await responseStream.ReadAsync(buffer, offset, count);
+
+                        position += result.Value;
+                        lastposition += result.Value;
+                        return true;
+                    }
+                    catch (Exception)
                     {
                         Close();
+                        throw;
                     }
-
-                    lastposition = position;
-
-                    var client = await http.GetHttpClient(url).ConfigureAwait(false);
-                    if (position != 0)
-                    {
-                        client.AddRange(position);
-                    }
-
-                    client.Method = "GET";
-
-                    response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false);
-                    var lengthStr = response.GetResponseHeader("Content-Length");
-                    long len;
-                    if (long.TryParse(lengthStr, out len))
-                    {
-                        length = position + len;
-                    }
-
-                    responseStream = response.GetResponseStream();
-                }
-                catch (Exception)
-                {
-                    Close();
-                    throw;
-                }
+                }, http.GeneralExceptionProcessor);
+            if (result == null)
+            {
+                throw new NullReferenceException("Read result was not set");
             }
 
-            var result = await responseStream.ReadAsync(buffer, offset, count);
-            position += result;
-            lastposition += result;
-            return result;
+            return result.Value;
         }
 
         /// <inheritdoc/>

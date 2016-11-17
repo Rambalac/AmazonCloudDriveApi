@@ -19,7 +19,7 @@ namespace Azi.Tools
     /// </summary>
     internal class HttpClient
     {
-        private const int RetryTimes = 100;
+        public const int RetryTimes = 100;
 
         private static readonly HashSet<HttpStatusCode> RetryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
         private readonly Dictionary<int, Func<HttpStatusCode, Task<bool>>> retryErrorProcessor = new Dictionary<int, Func<HttpStatusCode, Task<bool>>>();
@@ -523,7 +523,7 @@ namespace Azi.Tools
             }
         }
 
-        private static TimeSpan RetryDelay(int time)
+        public static TimeSpan RetryDelay(int time)
         {
             return TimeSpan.FromSeconds(1 << time);
         }
@@ -551,7 +551,7 @@ namespace Azi.Tools
             return null;
         }
 
-        private async Task<bool> GeneralExceptionProcessor(Exception ex)
+        public async Task<bool> GeneralExceptionProcessor(Exception ex)
         {
             if (ex is TaskCanceledException)
             {
