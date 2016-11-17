@@ -19,6 +19,9 @@ namespace Azi.Tools
     /// </summary>
     internal class HttpClient
     {
+        /// <summary>
+        /// Maximum number of retries.
+        /// </summary>
         public const int RetryTimes = 100;
 
         private static readonly HashSet<HttpStatusCode> RetryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
@@ -27,7 +30,7 @@ namespace Azi.Tools
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClient"/> class.
-        /// Constructs new class with initializing callback
+        /// Constructs new class with initializing callback.
         /// </summary>
         /// <param name="settingsSetter">Async func to configure HttpWebRequest</param>
         public HttpClient(Func<HttpWebRequest, Task> settingsSetter)
@@ -36,6 +39,16 @@ namespace Azi.Tools
         }
 
         private static Encoding UTF8 => new UTF8Encoding(false, true);
+
+        /// <summary>
+        /// Returns delay interval depended on number of retries.
+        /// </summary>
+        /// <param name="time">Number of retry</param>
+        /// <returns>Time for delay</returns>
+        public static TimeSpan RetryDelay(int time)
+        {
+            return TimeSpan.FromSeconds(1 << time);
+        }
 
         /// <summary>
         /// Add Http error processor
@@ -57,6 +70,48 @@ namespace Azi.Tools
         public void AddRetryErrorProcessor(int code, Func<HttpStatusCode, Task<bool>> func)
         {
             retryErrorProcessor[code] = func;
+        }
+
+        /// <summary>
+        /// Processes exception to decide retry or abort.
+        /// </summary>
+        /// <param name="ex">Exception to process</param>
+        /// <returns>False if retry</returns>
+        public async Task<bool> GeneralExceptionProcessor(Exception ex)
+        {
+            if (ex is TaskCanceledException)
+            {
+                throw ex;
+            }
+
+            var webex = SearchForException<WebException>(ex);
+            if (webex != null)
+            {
+                var webresp = webex.Response as HttpWebResponse;
+                if (webresp != null)
+                {
+                    if (RetryCodes.Contains(webresp.StatusCode))
+                    {
+                        return false;
+                    }
+
+                    Func<HttpStatusCode, Task<bool>> func;
+                    if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out func))
+                    {
+                        if (func != null)
+                        {
+                            if (await func(webresp.StatusCode).ConfigureAwait(false))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    throw new HttpWebException(webex.Message, webresp.StatusCode);
+                }
+            }
+
+            throw ex;
         }
 
         /// <summary>
@@ -523,11 +578,6 @@ namespace Azi.Tools
             }
         }
 
-        public static TimeSpan RetryDelay(int time)
-        {
-            return TimeSpan.FromSeconds(1 << time);
-        }
-
         private static T SearchForException<T>(Exception ex, int depth = 3)
                                                     where T : class
         {
@@ -549,43 +599,6 @@ namespace Azi.Tools
             }
 
             return null;
-        }
-
-        public async Task<bool> GeneralExceptionProcessor(Exception ex)
-        {
-            if (ex is TaskCanceledException)
-            {
-                throw ex;
-            }
-
-            var webex = SearchForException<WebException>(ex);
-            if (webex != null)
-            {
-                var webresp = webex.Response as HttpWebResponse;
-                if (webresp != null)
-                {
-                    if (RetryCodes.Contains(webresp.StatusCode))
-                    {
-                        return false;
-                    }
-
-                    Func<HttpStatusCode, Task<bool>> func;
-                    if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out func))
-                    {
-                        if (func != null)
-                        {
-                            if (await func(webresp.StatusCode).ConfigureAwait(false))
-                            {
-                                return false;
-                            }
-                        }
-                    }
-
-                    throw new HttpWebException(webex.Message, webresp.StatusCode);
-                }
-            }
-
-            throw ex;
         }
 
         private class CopyStreamState

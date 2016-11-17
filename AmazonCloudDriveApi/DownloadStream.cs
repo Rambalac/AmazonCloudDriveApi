@@ -151,7 +151,7 @@ namespace Azi.Amazon.CloudDrive
                         Close();
                         throw;
                     }
-                }, http.GeneralExceptionProcessor);
+                }, http.GeneralExceptionProcessor).ConfigureAwait(false);
             if (result == null)
             {
                 throw new NullReferenceException("Read result was not set");
