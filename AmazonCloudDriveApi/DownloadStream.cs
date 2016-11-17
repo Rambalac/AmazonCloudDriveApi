@@ -140,7 +140,7 @@ namespace Azi.Amazon.CloudDrive
                             responseStream = response.GetResponseStream();
                         }
 
-                        result = await responseStream.ReadAsync(buffer, offset, count);
+                        result = await responseStream.ReadAsync(buffer, offset, count).ConfigureAwait(false);
 
                         position += result.Value;
                         lastposition += result.Value;
