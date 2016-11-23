@@ -77,6 +77,14 @@ namespace Azi.Amazon.CloudDrive
                 await Task.Delay(1000).ConfigureAwait(false);
                 return true;
             });
+            http.AddRetryErrorProcessor(500, (code) =>
+            {
+                return Task.FromResult(true);
+            });
+            http.AddRetryErrorProcessor(504, (code) =>
+            {
+                return Task.FromResult(true);
+            });
             http.AddRetryErrorProcessor(HttpStatusCode.NotFound, (code) => Task.FromResult(false));
         }
 

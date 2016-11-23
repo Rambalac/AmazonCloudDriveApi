@@ -105,6 +105,7 @@ namespace Azi.Amazon.CloudDrive
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             int? result = null;
+            int retry = 0;
             await Retry.Do(
                 HttpClient.RetryTimes,
                 HttpClient.RetryDelay,
@@ -121,7 +122,7 @@ namespace Azi.Amazon.CloudDrive
 
                             lastposition = position;
 
-                            var client = await http.GetHttpClient(url).ConfigureAwait(false);
+                            var client = await http.GetHttpClient(url);
                             if (position != 0)
                             {
                                 client.AddRange(position);
@@ -129,7 +130,7 @@ namespace Azi.Amazon.CloudDrive
 
                             client.Method = "GET";
 
-                            response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false);
+                            response = (HttpWebResponse)await client.GetResponseAsync();
                             var lengthStr = response.GetResponseHeader("Content-Length");
                             long len;
                             if (long.TryParse(lengthStr, out len))
@@ -140,7 +141,7 @@ namespace Azi.Amazon.CloudDrive
                             responseStream = response.GetResponseStream();
                         }
 
-                        result = await responseStream.ReadAsync(buffer, offset, count).ConfigureAwait(false);
+                        result = await responseStream.ReadAsync(buffer, offset, count, cancellationToken);
 
                         position += result.Value;
                         lastposition += result.Value;
@@ -148,6 +149,7 @@ namespace Azi.Amazon.CloudDrive
                     }
                     catch (Exception)
                     {
+                        retry++;
                         Close();
                         throw;
                     }
