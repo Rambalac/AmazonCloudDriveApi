@@ -23,41 +23,41 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         async Task<Stream> IAmazonFiles.Download(string id)
         {
-            var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
+            var url = $"{await GetContentUrl().ConfigureAwait(false)}nodes/{id}/content";
             return new DownloadStream(http, url);
         }
 
         /// <inheritdoc/>
         async Task IAmazonFiles.Download(string id, Stream stream, long? fileOffset, long? length, int bufferSize, Func<long, long> progress)
         {
-            var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
+            var url = $"{await GetContentUrl().ConfigureAwait(false)}nodes/{id}/content";
             await http.GetToStreamAsync(url, stream, fileOffset, length, bufferSize, progress).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
         async Task IAmazonFiles.Download(string id, Func<HttpWebResponse, Task> streammer, long? fileOffset, long? length)
         {
-            var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
+            var url = $"{await GetContentUrl().ConfigureAwait(false)}nodes/{id}/content";
             await http.GetToStreamAsync(url, streammer, fileOffset, length).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
         async Task<int> IAmazonFiles.Download(string id, byte[] buffer, int bufferIndex, long fileOffset, int length)
         {
-            var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
+            var url = $"{await GetContentUrl().ConfigureAwait(false)}nodes/{id}/content";
             return await http.GetToBufferAsync(url, buffer, bufferIndex, fileOffset, length).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
-        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator, CancellationToken? token, Func<long, long> progress)
+        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator, CancellationToken? cancellation, Func<long, long> progress)
         {
-            var url = string.Format("{0}nodes/{1}/content", await GetContentUrl().ConfigureAwait(false), id);
+            var url = $"{await GetContentUrl().ConfigureAwait(false)}nodes/{id}/content";
             var file = new SendFileInfo
             {
                 StreamOpener = streamCreator,
                 FileName = id,
                 FormName = "content",
-                CancellationToken = token,
+                CancellationToken = cancellation,
                 Progress = progress
             };
             return await http.SendFile<AmazonNode>(HttpMethod.Put, url, file).ConfigureAwait(false);
@@ -78,13 +78,13 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         async Task<AmazonNode> IAmazonFiles.UploadNew(FileUpload fileUpload)
         {
-            var url = string.Format("{0}nodes", await GetContentUrl().ConfigureAwait(false));
+            var url = $"{await GetContentUrl().ConfigureAwait(false)}nodes";
             if (fileUpload.AllowDuplicate)
             {
                 url += "?suppress=deduplication";
             }
 
-            var obj = new NewChild { name = fileUpload.FileName, parents = new string[] { fileUpload.ParentId }, kind = "FILE" };
+            var obj = new NewChild { name = fileUpload.FileName, parents = new[] { fileUpload.ParentId }, kind = "FILE" };
             var meta = JsonConvert.SerializeObject(obj);
 
             var file = new SendFileInfo

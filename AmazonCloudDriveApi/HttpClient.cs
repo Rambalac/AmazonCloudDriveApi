@@ -4,11 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -85,30 +85,27 @@ namespace Azi.Tools
             }
 
             var webex = SearchForException<WebException>(ex);
-            if (webex != null)
+            var webresp = webex?.Response as HttpWebResponse;
+            if (webresp != null)
             {
-                var webresp = webex.Response as HttpWebResponse;
-                if (webresp != null)
+                if (RetryCodes.Contains(webresp.StatusCode))
                 {
-                    if (RetryCodes.Contains(webresp.StatusCode))
-                    {
-                        return false;
-                    }
+                    return false;
+                }
 
-                    Func<HttpStatusCode, Task<bool>> func;
-                    if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out func))
+                Func<HttpStatusCode, Task<bool>> func;
+                if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out func))
+                {
+                    if (func != null)
                     {
-                        if (func != null)
+                        if (await func(webresp.StatusCode).ConfigureAwait(false))
                         {
-                            if (await func(webresp.StatusCode).ConfigureAwait(false))
-                            {
-                                return false;
-                            }
+                            return false;
                         }
                     }
-
-                    throw new HttpWebException(webex.Message, webresp.StatusCode);
                 }
+
+                throw new HttpWebException(webex.Message, webresp.StatusCode);
             }
 
             throw ex;
@@ -168,14 +165,14 @@ namespace Azi.Tools
         /// <returns>Async Task</returns>
         public async Task GetToStreamAsync(string url, Stream stream, long? fileOffset = null, long? length = null, int bufferSize = 4096, Func<long, long> progress = null)
         {
-            var start = DateTime.UtcNow;
             await GetToStreamAsync(
                 url,
                 async (response) =>
                     {
-                        using (Stream input = response.GetResponseStream())
+                        using (var input = response.GetResponseStream())
                         {
-                            byte[] buff = new byte[Math.Min(bufferSize, (response.ContentLength != -1) ? response.ContentLength : long.MaxValue)];
+                            Contract.Assert(input != null, "input!=null");
+                            var buff = new byte[Math.Min(bufferSize, (response.ContentLength != -1) ? response.ContentLength : long.MaxValue)];
                             int red;
                             long nextProgress = -1;
                             long totalRead = 0;
@@ -218,7 +215,7 @@ namespace Azi.Tools
                         {
                             client.AddRange((long)fileOffset, (long)(fileOffset + length - 1));
                         }
-                        else if (fileOffset != null && length == null)
+                        else if (fileOffset != null)
                         {
                             client.AddRange((long)fileOffset);
                         }
@@ -242,39 +239,39 @@ namespace Azi.Tools
         /// <summary>
         /// Sends PATCH request with object serialized to JSON and get response as parsed JSON
         /// </summary>
-        /// <typeparam name="P">Request object type</typeparam>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TParam">Request object type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="url">URL for request</param>
         /// <param name="obj">Object for request</param>
         /// <returns>Async result object</returns>
-        public async Task<R> Patch<P, R>(string url, P obj)
+        public async Task<TResult> Patch<TParam, TResult>(string url, TParam obj)
         {
-            return await Send<P, R>(new HttpMethod("PATCH"), url, obj).ConfigureAwait(false);
+            return await Send<TParam, TResult>(new HttpMethod("PATCH"), url, obj).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends POST request with object serialized to JSON and get response as parsed JSON
         /// </summary>
-        /// <typeparam name="P">Request object type</typeparam>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TParam">Request object type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="url">URL for request</param>
         /// <param name="obj">Object for request</param>
         /// <returns>Async result object</returns>
-        public async Task<R> Post<P, R>(string url, P obj)
+        public async Task<TResult> Post<TParam, TResult>(string url, TParam obj)
         {
-            return await Send<P, R>(HttpMethod.Post, url, obj).ConfigureAwait(false);
+            return await Send<TParam, TResult>(HttpMethod.Post, url, obj).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends POST request with parameters
         /// </summary>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="url">URL for request</param>
         /// <param name="pars">Post parameters</param>
         /// <returns>Async result object</returns>
-        public async Task<R> PostForm<R>(string url, Dictionary<string, string> pars)
+        public async Task<TResult> PostForm<TResult>(string url, Dictionary<string, string> pars)
         {
-            return await SendForm<R>(HttpMethod.Post, url, pars).ConfigureAwait(false);
+            return await SendForm<TResult>(HttpMethod.Post, url, pars).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -298,42 +295,42 @@ namespace Azi.Tools
         /// <summary>
         /// Sends request with object serialized to JSON and get response as parsed JSON
         /// </summary>
-        /// <typeparam name="P">Request object type</typeparam>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TParam">Request object type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="method">Http method</param>
         /// <param name="url">URL for request</param>
         /// <param name="obj">Object for request</param>
         /// <returns>Async result object</returns>
-        public async Task<R> Send<P, R>(HttpMethod method, string url, P obj)
+        public async Task<TResult> Send<TParam, TResult>(HttpMethod method, string url, TParam obj)
         {
-            return await Send(method, url, obj, (r) => r.ReadAsAsync<R>()).ConfigureAwait(false);
+            return await Send(method, url, obj, (r) => r.ReadAsAsync<TResult>()).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends request and get response as parsed JSON
         /// </summary>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="url">URL for request</param>
         /// <returns>Async result object</returns>
-        public async Task<R> Send<R>(HttpMethod method, string url)
+        public async Task<TResult> Send<TResult>(HttpMethod method, string url)
         {
-            return await Send(method, url, (r) => r.ReadAsAsync<R>()).ConfigureAwait(false);
+            return await Send(method, url, (r) => r.ReadAsAsync<TResult>()).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends request with object serialized to JSON and get response as parsed JSON
         /// </summary>
-        /// <typeparam name="P">Request object type</typeparam>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TParam">Request object type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="url">URL for request</param>
         /// <param name="obj">Object for request</param>
         /// <param name="responseParser">Func to parse response and return result object</param>
         /// <returns>Async result object</returns>
-        public async Task<R> Send<P, R>(HttpMethod method, string url, P obj, Func<HttpWebResponse, Task<R>> responseParser)
+        public async Task<TResult> Send<TParam, TResult>(HttpMethod method, string url, TParam obj, Func<HttpWebResponse, Task<TResult>> responseParser)
         {
-            R result = default(R);
+            var result = default(TResult);
             await Retry.Do(
                 RetryTimes,
                 RetryDelay,
@@ -370,14 +367,14 @@ namespace Azi.Tools
         /// <summary>
         /// Sends request and get response as parsed JSON
         /// </summary>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="url">URL for request</param>
         /// <param name="responseParser">Func to parse response and return result object</param>
         /// <returns>Async result object</returns>
-        public async Task<R> Send<R>(HttpMethod method, string url, Func<HttpWebResponse, Task<R>> responseParser)
+        public async Task<TResult> Send<TResult>(HttpMethod method, string url, Func<HttpWebResponse, Task<TResult>> responseParser)
         {
-            R result = default(R);
+            var result = default(TResult);
             await Retry.Do(
                 RetryTimes,
                 RetryDelay,
@@ -404,14 +401,14 @@ namespace Azi.Tools
         /// <summary>
         /// Uploads file
         /// </summary>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="url">URL for request</param>
         /// <param name="file">File upload parameters. Input stream must support Length</param>
         /// <returns>Async result object</returns>
-        public async Task<R> SendFile<R>(HttpMethod method, string url, SendFileInfo file)
+        public async Task<TResult> SendFile<TResult>(HttpMethod method, string url, SendFileInfo file)
         {
-            R result = default(R);
+            var result = default(TResult);
             await Retry.Do(
                 RetryTimes,
                 RetryDelay,
@@ -447,7 +444,7 @@ namespace Azi.Tools
                                     return await LogBadResponse(response).ConfigureAwait(false);
                                 }
 
-                                result = await response.ReadAsAsync<R>().ConfigureAwait(false);
+                                result = await response.ReadAsAsync<TResult>().ConfigureAwait(false);
                             }
                             return true;
                         }
@@ -464,14 +461,14 @@ namespace Azi.Tools
         /// <summary>
         /// Sends request with form data
         /// </summary>
-        /// <typeparam name="R">Result type</typeparam>
+        /// <typeparam name="TResult">Result type</typeparam>
         /// <param name="method">HTTP method</param>
         /// <param name="url">URL for request</param>
         /// <param name="pars">Request parameters</param>
         /// <returns>Async result object</returns>
-        public async Task<R> SendForm<R>(HttpMethod method, string url, Dictionary<string, string> pars)
+        public async Task<TResult> SendForm<TResult>(HttpMethod method, string url, Dictionary<string, string> pars)
         {
-            R result = default(R);
+            var result = default(TResult);
             await Retry.Do(
                 RetryTimes,
                 RetryDelay,
@@ -495,7 +492,7 @@ namespace Azi.Tools
                                 return await LogBadResponse(response).ConfigureAwait(false);
                             }
 
-                            result = await response.ReadAsAsync<R>().ConfigureAwait(false);
+                            result = await response.ReadAsAsync<TResult>().ConfigureAwait(false);
                         }
                         return true;
                     },
@@ -551,7 +548,7 @@ namespace Azi.Tools
 
                 writer.Write($"--{boundry}\r\n");
                 writer.Write($"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
-                writer.Write($"Content-Type: application/octet-stream\r\n");
+                writer.Write("Content-Type: application/octet-stream\r\n");
 
                 writer.Write($"Content-Length: {filelength}\r\n\r\n");
             }
@@ -581,11 +578,10 @@ namespace Azi.Tools
         private static T SearchForException<T>(Exception ex, int depth = 3)
                                                     where T : class
         {
-            T res = null;
             var cur = ex;
-            for (int i = 0; i < depth; i++)
+            for (var i = 0; i < depth; i++)
             {
-                res = cur as T;
+                var res = cur as T;
                 if (res != null)
                 {
                     return res;
@@ -605,7 +601,7 @@ namespace Azi.Tools
         {
             public long NextPos { get; set; } = -1;
 
-            public long Pos { get; set; } = 0;
+            public long Pos { get; set; }
         }
     }
 }

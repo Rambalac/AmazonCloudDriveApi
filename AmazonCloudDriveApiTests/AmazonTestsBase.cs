@@ -11,12 +11,9 @@ namespace Azi.Amazon.CloudDrive.Tests
         {
             Amazon = Authenticate().Result;
             var rootId = Amazon.Nodes.GetRoot().Result.id;
-            var TestDir = TestDirBase + new Random().Next();
-            var node = Amazon.Nodes.GetChild(rootId, TestDir).Result;
-            if (node == null)
-            {
-                node = Amazon.Nodes.CreateFolder(rootId, TestDir).Result;
-            }
+            var testDir = TestDirBase + new Random().Next();
+            var node = Amazon.Nodes.GetChild(rootId, testDir).Result ??
+                       Amazon.Nodes.CreateFolder(rootId, testDir).Result;
             TestDirId = node.id;
         }
 
@@ -26,8 +23,7 @@ namespace Azi.Amazon.CloudDrive.Tests
 
             // AmazonSecret is in git ignore because Amazon App info should not be public. 
             // So to run tests you need to create your own class with your App Id and Secret.
-            var amazon = new AmazonDrive(AmazonSecret.ClientId, AmazonSecret.ClientSecret);
-            amazon.OnTokenUpdate = this;
+            var amazon = new AmazonDrive(AmazonSecret.ClientId, AmazonSecret.ClientSecret) { OnTokenUpdate = this };
 
             if (!string.IsNullOrWhiteSpace(settings.AuthRenewToken))
             {
@@ -52,13 +48,13 @@ namespace Azi.Amazon.CloudDrive.Tests
 
         protected string TestDirId;
 
-        public void OnTokenUpdated(string access_token, string refresh_token, DateTime expires_in)
+        public void OnTokenUpdated(string accessToken, string refreshToken, DateTime expiresIn)
         {
             var settings = Properties.Settings.Default;
 
-            settings.AuthToken = access_token;
-            settings.AuthRenewToken = refresh_token;
-            settings.AuthTokenExpiration = expires_in;
+            settings.AuthToken = accessToken;
+            settings.AuthRenewToken = refreshToken;
+            settings.AuthTokenExpiration = expiresIn;
             settings.Save();
         }
 

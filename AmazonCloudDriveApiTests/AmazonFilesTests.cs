@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -11,7 +10,7 @@ namespace Azi.Amazon.CloudDrive.Tests
 {
     public class AmazonFilesTests : AmazonTestsBase
     {
-        private const string testFileName = "testFile.txt";
+        private const string TestFileName = "testFile.txt";
 
         private readonly ITestOutputHelper output;
 
@@ -48,7 +47,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task UploadZeroLengthTest()
         {
             var testFileContent = new byte[0];
-            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
             Assert.Equal(0, testFile.Length);
 
             var memStr = new MemoryStream();
@@ -67,7 +66,7 @@ namespace Azi.Amazon.CloudDrive.Tests
             var fileUpload = new FileUpload
             {
                 ParentId = TestDirId,
-                FileName = testFileName,
+                FileName = TestFileName,
                 StreamOpener = () => new MemoryStream(testFileContent),
                 CancellationToken = token.Token
             };
@@ -79,11 +78,11 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task UploadNewProgressTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            int totalProgressCalls = 0;
+            var totalProgressCalls = 0;
             var fileUpload = new FileUpload
             {
                 ParentId = TestDirId,
-                FileName = testFileName,
+                FileName = TestFileName,
                 StreamOpener = () => new MemoryStream(testFileContent),
                 BufferSize = 10,
                 Progress = (pos) =>
@@ -103,7 +102,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task DownloadWithProgressCancelTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
 
             var memStr = new MemoryStream();
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
@@ -120,7 +119,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task DownloadWithProgressTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
 
             var memStr = new MemoryStream();
             await Amazon.Files.Download(testFile.id, memStr, progress: Progress1);
@@ -132,7 +131,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task DownloadWithSeekableStreamTest()
         {
             var testFileContent = Enumerable.Range(0, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, testFileName, () => new MemoryStream(testFileContent));
+            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
 
             var stream=await Amazon.Files.Download(testFile.id);
 

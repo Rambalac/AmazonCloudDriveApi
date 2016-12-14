@@ -4,7 +4,6 @@
 
 using System;
 using System.Net;
-using System.Runtime.Serialization;
 
 namespace Azi.Tools
 {
@@ -43,11 +42,5 @@ namespace Azi.Tools
         /// Gets HTTP Status Code
         /// </summary>
         public HttpStatusCode StatusCode { get; }
-
-        /// <inheritdoc/>
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-        }
     }
 }

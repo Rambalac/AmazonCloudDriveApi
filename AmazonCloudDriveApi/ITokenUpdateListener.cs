@@ -14,9 +14,9 @@ namespace Azi.Amazon.CloudDrive
         /// <summary>
         /// Called when Authentication Token updated
         /// </summary>
-        /// <param name="access_token">Authentication token</param>
-        /// <param name="refresh_token">Authentication token refresh token</param>
-        /// <param name="expires_in">Authentication token expiration time</param>
-        void OnTokenUpdated(string access_token, string refresh_token, DateTime expires_in);
+        /// <param name="accessToken">Authentication token</param>
+        /// <param name="refreshToken">Authentication token refresh token</param>
+        /// <param name="expiresIn">Authentication token expiration time</param>
+        void OnTokenUpdated(string accessToken, string refreshToken, DateTime expiresIn);
     }
 }

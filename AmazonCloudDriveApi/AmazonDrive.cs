@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Cache;
 using System.Text;
@@ -25,6 +26,8 @@ namespace Azi.Amazon.CloudDrive
     {
         private const string LoginUrlBase = "https://www.amazon.com/ap/oa";
         private const string TokenUrl = "https://api.amazon.com/auth/o2/token";
+        private const string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>Please, allow popups if they got blocked";
+
         private static readonly TimeSpan GeneralExpiration = TimeSpan.FromMinutes(5);
 
         private static readonly Dictionary<CloudDriveScopes, string> ScopeToStringMap = new Dictionary<CloudDriveScopes, string>
@@ -42,16 +45,14 @@ namespace Azi.Amazon.CloudDrive
 
         private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.close;</SCRIPT>You can close this tab");
 
-        private static readonly string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>Please, allow popups if they got blocked";
-
-        private static RequestCachePolicy standartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
+        private static readonly RequestCachePolicy StandartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
 
         private readonly HttpClient http;
 
-        private string clientId;
-        private string clientSecret;
+        private readonly string clientId;
+        private readonly string clientSecret;
 
-        private AuthToken token;
+        private AuthToken authTokens;
 
         private bool updatingToken;
 
@@ -77,14 +78,8 @@ namespace Azi.Amazon.CloudDrive
                 await Task.Delay(1000).ConfigureAwait(false);
                 return true;
             });
-            http.AddRetryErrorProcessor(500, (code) =>
-            {
-                return Task.FromResult(true);
-            });
-            http.AddRetryErrorProcessor(504, (code) =>
-            {
-                return Task.FromResult(true);
-            });
+            http.AddRetryErrorProcessor(500, (code) => Task.FromResult(true));
+            http.AddRetryErrorProcessor(504, (code) => Task.FromResult(true));
             http.AddRetryErrorProcessor(HttpStatusCode.NotFound, (code) => Task.FromResult(false));
         }
 
@@ -121,7 +116,7 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         public async Task<bool> AuthenticationByTokens(string authToken, string authRenewToken, DateTime authTokenExpiration)
         {
-            token = new AuthToken
+            authTokens = new AuthToken
             {
                 expires_in = 0,
                 createdTime = authTokenExpiration,
@@ -130,7 +125,7 @@ namespace Azi.Amazon.CloudDrive
                 token_type = "bearer"
             };
             await UpdateToken().ConfigureAwait(false);
-            return token != null;
+            return authTokens != null;
         }
 
         /// <inheritdoc/>
@@ -144,17 +139,17 @@ namespace Azi.Amazon.CloudDrive
                                     { "client_secret", clientSecret },
                                     { "redirect_uri", redirectUrl }
                                 };
-            token = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
-            if (token != null)
+            authTokens = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
+            if (authTokens == null)
             {
-                CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
-
-                await Account.GetEndpoint().ConfigureAwait(false);
-
-                return true;
+                return false;
             }
 
-            return false;
+            CallOnTokenUpdate(authTokens.access_token, authTokens.refresh_token, DateTime.UtcNow.AddSeconds(authTokens.expires_in));
+
+            await Account.GetEndpoint().ConfigureAwait(false);
+
+            return true;
         }
 
         /// <inheritdoc/>
@@ -173,12 +168,12 @@ namespace Azi.Amazon.CloudDrive
             {
                 redirectListener.Start();
                 var loginurl = BuildLoginUrl(redirectUrl, scope);
-                using (var tabProcess = Process.Start(redirectUrl))
+                using (Process.Start(redirectUrl))
                 {
                     for (var times = 0; times < 2; times++)
                     {
                         var task = redirectListener.GetContextAsync();
-                        var timeoutTask = (cancelToken != null) ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
+                        var timeoutTask = cancelToken != null ? Task.Delay(timeout, cancelToken.Value) : Task.Delay(timeout);
                         var anytask = await Task.WhenAny(task, timeoutTask).ConfigureAwait(false);
                         if (anytask == task)
                         {
@@ -206,38 +201,25 @@ namespace Azi.Amazon.CloudDrive
                 }
             }
 
-            return token != null;
+            return authTokens != null;
         }
 
-        private static string ScopeToString(CloudDriveScopes scope)
-        {
-            var result = new List<string>();
-            var values = Enum.GetValues(typeof(CloudDriveScopes));
-            foreach (CloudDriveScopes value in values)
-            {
-                if (scope.HasFlag(value))
-                {
-                    result.Add(ScopeToStringMap[value]);
-                }
-            }
+        private static string ScopeToString(CloudDriveScopes scope) => string.Join(" ", Enum.GetValues(typeof(CloudDriveScopes)).Cast<CloudDriveScopes>().Where(v => scope.HasFlag(v)).Select(v => ScopeToStringMap[v]));
 
-            return string.Join(" ", result);
-        }
-
-        private void CallOnTokenUpdate(string access_token, string refresh_token, DateTime expires_in)
+        private void CallOnTokenUpdate(string accessToken, string refreshToken, DateTime expiresIn)
         {
             ITokenUpdateListener action;
-            if (weakOnTokenUpdate != null && weakOnTokenUpdate.TryGetTarget(out action))
+            if ((weakOnTokenUpdate != null) && weakOnTokenUpdate.TryGetTarget(out action))
             {
-                action?.OnTokenUpdated(access_token, refresh_token, expires_in);
+                action.OnTokenUpdated(accessToken, refreshToken, expiresIn);
             }
         }
 
         private HttpListener CreateListener(string redirectUrl, out string realRedirectUrl, Func<int, int, int> portSelector = null)
         {
             var listener = new HttpListener();
-            int port = 0;
-            int time = 0;
+            var port = 0;
+            var time = 0;
             while (true)
             {
                 try
@@ -280,17 +262,17 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task<string> GetToken()
         {
-            if (token == null)
+            if (authTokens == null)
             {
                 throw new InvalidOperationException("Not authenticated");
             }
 
-            if (token.IsExpired)
+            if (authTokens.IsExpired)
             {
                 await UpdateToken().ConfigureAwait(false);
             }
 
-            return token?.access_token;
+            return authTokens?.access_token;
         }
 
         private async Task ProcessRedirect(HttpListenerContext context, string redirectUrl)
@@ -319,12 +301,12 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task SettingsSetter(HttpWebRequest client)
         {
-            if (token != null && !updatingToken)
+            if ((authTokens != null) && !updatingToken)
             {
                 client.Headers.Add("Authorization", "Bearer " + await GetToken().ConfigureAwait(false));
             }
 
-            client.CachePolicy = standartCache;
+            client.CachePolicy = StandartCache;
             client.UserAgent = "AZIACDDokanNet/" + GetType().Assembly.ImageRuntimeVersion;
 
             client.Timeout = 15000;
@@ -349,15 +331,15 @@ namespace Azi.Amazon.CloudDrive
                 var form = new Dictionary<string, string>
                     {
                         { "grant_type", "refresh_token" },
-                        { "refresh_token", token.refresh_token },
+                        { "refresh_token", authTokens.refresh_token },
                         { "client_id", clientId },
                         { "client_secret", clientSecret }
                     };
                 var newtoken = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
                 if (newtoken != null)
                 {
-                    token = newtoken;
-                    CallOnTokenUpdate(token.access_token, token.refresh_token, DateTime.UtcNow.AddSeconds(token.expires_in));
+                    authTokens = newtoken;
+                    CallOnTokenUpdate(authTokens.access_token, authTokens.refresh_token, DateTime.UtcNow.AddSeconds(authTokens.expires_in));
                 }
             }
             finally

@@ -2,30 +2,31 @@
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
+using System;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using Azi.Tools;
+
 namespace Azi.Amazon.CloudDrive
 {
-    using System;
-    using System.IO;
-    using System.Net;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Tools;
-
     /// <summary>
-    /// Seakable Stream for file download
+    ///     Seakable Stream for file download
     /// </summary>
     internal class DownloadStream : Stream
     {
-        private HttpClient http;
+        private readonly HttpClient http;
+        private readonly string url;
         private long lastposition;
         private long? length;
         private long position;
         private HttpWebResponse response;
         private Stream responseStream;
-        private string url;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DownloadStream"/> class.
+        ///     Initializes a new instance of the <see cref="DownloadStream" /> class.
         /// </summary>
         /// <param name="http">HttpClient to make requests</param>
         /// <param name="url">URL for download</param>
@@ -35,16 +36,16 @@ namespace Azi.Amazon.CloudDrive
             this.url = url;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanRead => true;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanSeek => true;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanWrite => false;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override long Length
         {
             get
@@ -58,21 +59,15 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override long Position
         {
-            get
-            {
-                return position;
-            }
+            get { return position; }
 
-            set
-            {
-                position = value;
-            }
+            set { position = value; }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void Close()
         {
             if (responseStream != null)
@@ -90,22 +85,21 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void Flush()
         {
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override int Read(byte[] buffer, int offset, int count)
         {
             return ReadAsync(buffer, offset, count, CancellationToken.None).Result;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             int? result = null;
-            int retry = 0;
             await Retry.Do(
                 HttpClient.RetryTimes,
                 HttpClient.RetryDelay,
@@ -113,7 +107,7 @@ namespace Azi.Amazon.CloudDrive
                 {
                     try
                     {
-                        if (position != lastposition || responseStream == null)
+                        if ((position != lastposition) || (responseStream == null))
                         {
                             if (position != lastposition)
                             {
@@ -141,6 +135,8 @@ namespace Azi.Amazon.CloudDrive
                             responseStream = response.GetResponseStream();
                         }
 
+                        Contract.Assert(responseStream != null, "responseStream!=null");
+
                         result = await responseStream.ReadAsync(buffer, offset, count, cancellationToken);
 
                         position += result.Value;
@@ -149,7 +145,6 @@ namespace Azi.Amazon.CloudDrive
                     }
                     catch (Exception)
                     {
-                        retry++;
                         Close();
                         throw;
                     }
@@ -162,7 +157,7 @@ namespace Azi.Amazon.CloudDrive
             return result.Value;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)
@@ -183,13 +178,13 @@ namespace Azi.Amazon.CloudDrive
             return position;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();

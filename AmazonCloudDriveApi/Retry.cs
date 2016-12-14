@@ -42,7 +42,7 @@ namespace Azi.Tools
         /// <returns>True if action was successful</returns>
         public static bool Do(int times, Func<int, bool> act)
         {
-            for (int time = 0; time < times - 1; time++)
+            for (var time = 0; time < times - 1; time++)
             {
                 if (act(time))
                 {
@@ -75,7 +75,7 @@ namespace Azi.Tools
         /// <returns>True if action was successful</returns>
         public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act, Func<Exception, Task<bool>> exceptionPocessor)
         {
-            for (int time = 0; time < times - 1; time++)
+            for (var time = 0; time < times - 1; time++)
             {
                 try
                 {
@@ -120,7 +120,7 @@ namespace Azi.Tools
         /// <returns>True if action was successful</returns>
         public static bool Do(int times, Func<int, TimeSpan> retryDelay, Func<bool> act, Func<Exception, bool> exceptionPocessor)
         {
-            for (int time = 0; time < times - 1; time++)
+            for (var time = 0; time < times - 1; time++)
             {
                 try
                 {

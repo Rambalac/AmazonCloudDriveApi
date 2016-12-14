@@ -2,6 +2,7 @@
 // Copyright (c) Rambalac. All rights reserved.
 // </copyright>
 
+// ReSharper disable InconsistentNaming
 #pragma warning disable SA1600 // Elements must be documented
 #pragma warning disable SA1300 // Element must begin with upper-case letter
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

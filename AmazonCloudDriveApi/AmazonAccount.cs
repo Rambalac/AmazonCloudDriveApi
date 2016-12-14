@@ -35,7 +35,7 @@ namespace Azi.Amazon.CloudDrive
             if (quota == null || DateTime.UtcNow - quota.lastCalculated > GeneralExpiration)
             {
                 var metadataUrl = await GetMetadataUrl().ConfigureAwait(false);
-                quota = await http.GetJsonAsync<Quota>(string.Format("{0}account/quota", metadataUrl)).ConfigureAwait(false);
+                quota = await http.GetJsonAsync<Quota>($"{metadataUrl}account/quota").ConfigureAwait(false);
             }
 
             return quota;
@@ -47,7 +47,7 @@ namespace Azi.Amazon.CloudDrive
             if (usage == null || DateTime.UtcNow - usage.lastCalculated > GeneralExpiration)
             {
                 var metadataUrl = await GetMetadataUrl().ConfigureAwait(false);
-                usage = await http.GetJsonAsync<Usage>(string.Format("{0}account/usage", metadataUrl)).ConfigureAwait(false);
+                usage = await http.GetJsonAsync<Usage>($"{metadataUrl}account/usage").ConfigureAwait(false);
             }
 
             return usage;
