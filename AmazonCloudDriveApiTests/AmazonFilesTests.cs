@@ -21,9 +21,26 @@ namespace Azi.Amazon.CloudDrive.Tests
 
 
         [Fact]
-        public void OverwriteTest()
+        public async Task OverwriteTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            var testName = "testfile.txt";
+            var testFileContent1 = Enumerable.Range(1, 100).Select(i => (byte)(i & 255)).ToArray();
+            var testFile = await Amazon.Files.UploadNew(TestDirId, testName, () => new MemoryStream(testFileContent1));
+            Assert.Equal(testName, testFile.name);
+
+            var memStr = new MemoryStream();
+            await Amazon.Files.Download(testFile.id, memStr);
+
+            Assert.Equal(testFileContent1, memStr.ToArray());
+
+            var testFileContent2 = Enumerable.Range(1, 50).Select(i => (byte)(i & 255)).ToArray();
+            var testFile2 = await Amazon.Files.Overwrite(testFile.id, () => new MemoryStream(testFileContent2));
+            Assert.Equal(testName, testFile2.name);
+
+            var memStr2 = new MemoryStream();
+            await Amazon.Files.Download(testFile2.id, memStr2);
+
+            Assert.Equal(testFileContent2, memStr2.ToArray());
         }
 
         [Theory]
@@ -43,7 +60,7 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.Equal(testFileContent, memStr.ToArray());
         }
 
-        [Fact(Skip ="API does not support zero length")]
+        [Fact(Skip = "API does not support zero length")]
         public async Task UploadZeroLengthTest()
         {
             var testFileContent = new byte[0];
@@ -133,7 +150,7 @@ namespace Azi.Amazon.CloudDrive.Tests
             var testFileContent = Enumerable.Range(0, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
 
-            var stream=await Amazon.Files.Download(testFile.id);
+            var stream = await Amazon.Files.Download(testFile.id);
 
             var testBuf = new byte[100];
             stream.Position = 100;
@@ -155,7 +172,7 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.Equal(Enumerable.Range(50, 100).Select(i => (byte)(i & 255)).ToArray(), testBuf);
         }
 
-        private long Progress1(long arg)
+        private static long Progress1(long arg)
         {
             return arg + 10;
         }

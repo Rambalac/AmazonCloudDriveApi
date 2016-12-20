@@ -1,25 +1,26 @@
-﻿using Xunit;
+﻿using System.Threading.Tasks;
+using Xunit;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
-    public class AmazonAccountTests
+    public class AmazonAccountTests : AmazonTestsBase
     {
         [Fact]
-        public void GetEndpointTest()
+        public async Task GetEndpointTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            await Amazon.Account.GetEndpoint();
         }
 
         [Fact]
-        public void GetQuotaTest()
+        public async Task GetQuotaTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            await Amazon.Account.GetQuota();
         }
 
         [Fact]
-        public void GetUsageTest()
+        public async Task GetUsageTest()
         {
-            Assert.True(false, "This test needs an implementation");
+            await Amazon.Account.GetUsage();
         }
     }
 }

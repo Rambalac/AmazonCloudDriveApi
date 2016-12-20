@@ -34,14 +34,14 @@ namespace Azi.Amazon.CloudDrive
         /// </summary>
         /// <param name="parentid">Parent node Id to look in</param>
         /// <param name="name">Name of node to look for</param>
-        /// <returns>Node info</returns>
+        /// <returns>Node info or null if not found</returns>
         Task<AmazonNode> GetChild(string parentid, string name);
 
         /// <summary>
         /// Requests for all nodes info belonging to specified parent
         /// </summary>
         /// <param name="id">Parent node id. If null Root folder is presumed</param>
-        /// <returns>List of nodes info</returns>
+        /// <returns>List of nodes info or empty list if not found</returns>
         Task<IList<AmazonNode>> GetChildren(string id = null);
 
         /// <summary>
@@ -52,11 +52,18 @@ namespace Azi.Amazon.CloudDrive
         Task<AmazonNode> GetNode(string id);
 
         /// <summary>
-        /// Requests for file node info with specified MD5
+        /// Requests for any single file node info with specified MD5. Can be multiple but only the first will be returned.
         /// </summary>
         /// <param name="md5">MD5 as low case hex without separators</param>
-        /// <returns>Found node info or null</returns>
+        /// <returns>List of nodes info or empty list if not found</returns>
         Task<AmazonNode> GetNodeByMD5(string md5);
+
+        /// <summary>
+        /// Requests for all file node info with specified MD5
+        /// </summary>
+        /// <param name="md5">MD5 as low case hex without separators</param>
+        /// <returns>Found nodes info or empty list</returns>
+        Task<IList<AmazonNode>> GetNodesByMD5(string md5);
 
         /// <summary>
         /// Requests for node extended information by its Id. Extended info includes temp link and assets.
