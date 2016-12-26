@@ -98,7 +98,7 @@ namespace Azi.Tools
                 {
                     if (func != null)
                     {
-                        if (await func(webresp.StatusCode).ConfigureAwait(false))
+                        if (await func(webresp.StatusCode))
                         {
                             return false;
                         }
@@ -120,7 +120,7 @@ namespace Azi.Tools
         {
             var result = (HttpWebRequest)WebRequest.Create(url);
 
-            await settingsSetter(result).ConfigureAwait(false);
+            await settingsSetter(result);
             return result;
         }
 
@@ -132,7 +132,7 @@ namespace Azi.Tools
         /// <returns>parsed response</returns>
         public async Task<T> GetJsonAsync<T>(string url)
         {
-            return await Send<T>(HttpMethod.Get, url).ConfigureAwait(false);
+            return await Send<T>(HttpMethod.Get, url);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Azi.Tools
         {
             using (var stream = new MemoryStream(buffer, bufferIndex, length))
             {
-                await GetToStreamAsync(url, stream, fileOffset, length).ConfigureAwait(false);
+                await GetToStreamAsync(url, stream, fileOffset, length);
                 return (int)stream.Position;
             }
         }
@@ -163,7 +163,7 @@ namespace Azi.Tools
         /// <param name="bufferSize">Size of memory buffer for download</param>
         /// <param name="progress">Func for progress. Parameter is current progress, result should be next position after which progress func will be called again</param>
         /// <returns>Async Task</returns>
-        public async Task GetToStreamAsync(string url, Stream stream, long? fileOffset = null, long? length = null, int bufferSize = 4096, Func<long, long> progress = null)
+        public async Task GetToStreamAsync(string url, Stream stream, long? fileOffset = null, long? length = null, int bufferSize = 4096, Func<long, Task<long>> progress = null)
         {
             await GetToStreamAsync(
                 url,
@@ -176,13 +176,13 @@ namespace Azi.Tools
                             int red;
                             long nextProgress = -1;
                             long totalRead = 0;
-                            while ((red = await input.ReadAsync(buff, 0, buff.Length).ConfigureAwait(false)) > 0)
+                            while ((red = await input.ReadAsync(buff, 0, buff.Length)) > 0)
                             {
                                 totalRead += red;
-                                await stream.WriteAsync(buff, 0, red).ConfigureAwait(false);
+                                await stream.WriteAsync(buff, 0, red);
                                 if (progress != null && totalRead >= nextProgress)
                                 {
-                                    nextProgress = progress.Invoke(totalRead);
+                                    nextProgress = await progress.Invoke(totalRead);
                                 }
                             }
                             if (nextProgress == -1)
@@ -192,7 +192,7 @@ namespace Azi.Tools
                         }
                     },
                 fileOffset,
-                length).ConfigureAwait(false);
+                length);
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace Azi.Tools
                 RetryDelay,
                 async () =>
                     {
-                        var client = await GetHttpClient(url).ConfigureAwait(false);
+                        var client = await GetHttpClient(url);
                         if (fileOffset != null && length != null)
                         {
                             client.AddRange((long)fileOffset, (long)(fileOffset + length - 1));
@@ -222,18 +222,18 @@ namespace Azi.Tools
 
                         client.Method = "GET";
 
-                        using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
+                        using (var response = (HttpWebResponse)await client.GetResponseAsync())
                         {
                             if (!response.IsSuccessStatusCode())
                             {
-                                return await LogBadResponse(response).ConfigureAwait(false);
+                                return await LogBadResponse(response);
                             }
 
-                            await streammer(response).ConfigureAwait(false);
+                            await streammer(response);
                         }
                         return true;
                     },
-                GeneralExceptionProcessor).ConfigureAwait(false);
+                GeneralExceptionProcessor);
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace Azi.Tools
         /// <returns>Async result object</returns>
         public async Task<TResult> Patch<TParam, TResult>(string url, TParam obj)
         {
-            return await Send<TParam, TResult>(new HttpMethod("PATCH"), url, obj).ConfigureAwait(false);
+            return await Send<TParam, TResult>(new HttpMethod("PATCH"), url, obj);
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace Azi.Tools
         /// <returns>Async result object</returns>
         public async Task<TResult> Post<TParam, TResult>(string url, TParam obj)
         {
-            return await Send<TParam, TResult>(HttpMethod.Post, url, obj).ConfigureAwait(false);
+            return await Send<TParam, TResult>(HttpMethod.Post, url, obj);
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ namespace Azi.Tools
         /// <returns>Async result object</returns>
         public async Task<TResult> PostForm<TResult>(string url, Dictionary<string, string> pars)
         {
-            return await SendForm<TResult>(HttpMethod.Post, url, pars).ConfigureAwait(false);
+            return await SendForm<TResult>(HttpMethod.Post, url, pars);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace Azi.Tools
         /// <returns>Async result object</returns>
         public async Task<TResult> Send<TParam, TResult>(HttpMethod method, string url, TParam obj)
         {
-            return await Send(method, url, obj, (r) => r.ReadAsAsync<TResult>()).ConfigureAwait(false);
+            return await Send(method, url, obj, (r) => r.ReadAsAsync<TResult>());
         }
 
         /// <summary>
@@ -315,7 +315,7 @@ namespace Azi.Tools
         /// <returns>Async result object</returns>
         public async Task<TResult> Send<TResult>(HttpMethod method, string url)
         {
-            return await Send(method, url, (r) => r.ReadAsAsync<TResult>()).ConfigureAwait(false);
+            return await Send(method, url, (r) => r.ReadAsAsync<TResult>());
         }
 
         /// <summary>
@@ -336,31 +336,31 @@ namespace Azi.Tools
                 RetryDelay,
                 async () =>
                     {
-                        var client = await GetHttpClient(url).ConfigureAwait(false);
+                        var client = await GetHttpClient(url);
                         client.Method = method.ToString();
                         var data = JsonConvert.SerializeObject(obj);
                         using (var content = new StringContent(data))
                         {
                             client.ContentType = content.Headers.ContentType.ToString();
 
-                            using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
+                            using (var output = await client.GetRequestStreamAsync())
                             {
-                                await content.CopyToAsync(output).ConfigureAwait(false);
+                                await content.CopyToAsync(output);
                             }
                         }
 
-                        using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
+                        using (var response = (HttpWebResponse)await client.GetResponseAsync())
                         {
                             if (!response.IsSuccessStatusCode())
                             {
-                                return await LogBadResponse(response).ConfigureAwait(false);
+                                return await LogBadResponse(response);
                             }
 
-                            result = await responseParser(response).ConfigureAwait(false);
+                            result = await responseParser(response);
                         }
                         return true;
                     },
-                GeneralExceptionProcessor).ConfigureAwait(false);
+                GeneralExceptionProcessor);
             return result;
         }
 
@@ -380,21 +380,21 @@ namespace Azi.Tools
                 RetryDelay,
                 async () =>
                     {
-                        var client = await GetHttpClient(url).ConfigureAwait(false);
+                        var client = await GetHttpClient(url);
                         client.Method = method.ToString();
 
-                        using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
+                        using (var response = (HttpWebResponse)await client.GetResponseAsync())
                         {
                             if (!response.IsSuccessStatusCode())
                             {
-                                return await LogBadResponse(response).ConfigureAwait(false);
+                                return await LogBadResponse(response);
                             }
 
-                            result = await responseParser(response).ConfigureAwait(false);
+                            result = await responseParser(response);
                         }
                         return true;
                     },
-                GeneralExceptionProcessor).ConfigureAwait(false);
+                GeneralExceptionProcessor);
             return result;
         }
 
@@ -414,7 +414,7 @@ namespace Azi.Tools
                 RetryDelay,
                 async () =>
                     {
-                        var client = await GetHttpClient(url).ConfigureAwait(false);
+                        var client = await GetHttpClient(url);
                         try
                         {
                             client.Method = method.ToString();
@@ -429,22 +429,22 @@ namespace Azi.Tools
                                 var pre = GetMultipartFormPre(file, input.Length, boundry);
                                 var post = GetMultipartFormPost(boundry);
                                 client.ContentLength = pre.Length + input.Length + post.Length;
-                                using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
+                                using (var output = await client.GetRequestStreamAsync())
                                 {
                                     var state = new CopyStreamState();
-                                    await CopyStreams(pre, output, file, state).ConfigureAwait(false);
-                                    await CopyStreams(input, output, file, state).ConfigureAwait(false);
-                                    await CopyStreams(post, output, file, state).ConfigureAwait(false);
+                                    await CopyStreams(pre, output, file, state);
+                                    await CopyStreams(input, output, file, state);
+                                    await CopyStreams(post, output, file, state);
                                 }
                             }
-                            using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
+                            using (var response = (HttpWebResponse)await client.GetResponseAsync())
                             {
                                 if (!response.IsSuccessStatusCode())
                                 {
-                                    return await LogBadResponse(response).ConfigureAwait(false);
+                                    return await LogBadResponse(response);
                                 }
 
-                                result = await response.ReadAsAsync<TResult>().ConfigureAwait(false);
+                                result = await response.ReadAsAsync<TResult>();
                             }
                             return true;
                         }
@@ -454,7 +454,7 @@ namespace Azi.Tools
                             throw;
                         }
                     },
-                GeneralExceptionProcessor).ConfigureAwait(false);
+                GeneralExceptionProcessor);
             return result;
         }
 
@@ -474,29 +474,29 @@ namespace Azi.Tools
                 RetryDelay,
                 async () =>
                     {
-                        var client = await GetHttpClient(url).ConfigureAwait(false);
+                        var client = await GetHttpClient(url);
                         client.Method = method.ToString();
                         using (var content = new FormUrlEncodedContent(pars))
                         {
                             client.ContentType = content.Headers.ContentType.ToString();
 
-                            using (var output = await client.GetRequestStreamAsync().ConfigureAwait(false))
+                            using (var output = await client.GetRequestStreamAsync())
                             {
-                                await content.CopyToAsync(output).ConfigureAwait(false);
+                                await content.CopyToAsync(output);
                             }
                         }
-                        using (var response = (HttpWebResponse)await client.GetResponseAsync().ConfigureAwait(false))
+                        using (var response = (HttpWebResponse)await client.GetResponseAsync())
                         {
                             if (!response.IsSuccessStatusCode())
                             {
-                                return await LogBadResponse(response).ConfigureAwait(false);
+                                return await LogBadResponse(response);
                             }
 
-                            result = await response.ReadAsAsync<TResult>().ConfigureAwait(false);
+                            result = await response.ReadAsAsync<TResult>();
                         }
                         return true;
                     },
-                GeneralExceptionProcessor).ConfigureAwait(false);
+                GeneralExceptionProcessor);
             return result;
         }
 
@@ -504,18 +504,18 @@ namespace Azi.Tools
         {
             var buffer = new byte[info.BufferSize];
             int bytesRead;
-            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length)) > 0)
             {
                 if (info.CancellationToken != null && info.CancellationToken.Value.IsCancellationRequested)
                 {
                     throw new TaskCanceledException();
                 }
 
-                await destination.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+                await destination.WriteAsync(buffer, 0, bytesRead);
                 state.Pos += bytesRead;
                 if (info.Progress != null && state.Pos >= state.NextPos)
                 {
-                    state.NextPos = info.Progress.Invoke(state.Pos);
+                    state.NextPos = await info.Progress.Invoke(state.Pos);
                 }
             }
         }
@@ -561,7 +561,7 @@ namespace Azi.Tools
         {
             try
             {
-                var message = await response.ReadAsStringAsync().ConfigureAwait(false);
+                var message = await response.ReadAsStringAsync();
                 if (!RetryCodes.Contains(response.StatusCode))
                 {
                     throw new HttpWebException(message, response.StatusCode);

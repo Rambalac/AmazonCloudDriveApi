@@ -31,9 +31,22 @@ namespace Azi.Amazon.CloudDrive
         /// <inheritdoc/>
         async Task IAmazonFiles.Download(string id, Stream stream, long? fileOffset, long? length, int bufferSize, Func<long, long> progress)
         {
+            Func<long, Task<long>> progressAsync = null;
+            if (progress != null)
+            {
+                progressAsync = p => Task.FromResult(progress(p));
+            }
+
+            await Files.Download(id, stream, fileOffset, length, bufferSize, progressAsync).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        async Task IAmazonFiles.Download(string id, Stream stream, long? fileOffset, long? length, int bufferSize, Func<long, Task<long>> progressAsync)
+        {
             var content = await GetContentUrl().ConfigureAwait(false);
             var url = $"{content}nodes/{id}/content";
-            await http.GetToStreamAsync(url, stream, fileOffset, length, bufferSize, progress).ConfigureAwait(false);
+
+            await http.GetToStreamAsync(url, stream, fileOffset, length, bufferSize, progressAsync).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -62,22 +75,27 @@ namespace Azi.Amazon.CloudDrive
                 StreamOpener = streamCreator,
                 FileName = id,
                 FormName = "content",
-                CancellationToken = cancellation,
-                Progress = progress
+                CancellationToken = cancellation
             };
+            if (progress != null)
+            {
+                file.Progress = p => Task.FromResult(progress(p));
+            }
+
             return await http.SendFile<AmazonNode>(HttpMethod.Put, url, file).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
         async Task<AmazonNode> IAmazonFiles.UploadNew(string parentId, string fileName, Func<Stream> streamOpener, bool allowDuplicate)
         {
-            return await ((IAmazonFiles)this).UploadNew(new FileUpload
+            var fileUpload = new FileUpload
             {
                 ParentId = parentId,
                 AllowDuplicate = allowDuplicate,
                 FileName = fileName,
                 StreamOpener = streamOpener
-            }).ConfigureAwait(false);
+            };
+            return await ((IAmazonFiles)this).UploadNew(fileUpload).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -100,12 +118,17 @@ namespace Azi.Amazon.CloudDrive
                 FormName = "content",
                 CancellationToken = fileUpload.CancellationToken,
                 BufferSize = fileUpload.BufferSize,
-                Progress = fileUpload.Progress,
+                Progress = fileUpload.ProgressAsync,
                 Parameters = new Dictionary<string, string>
                     {
                         { "metadata", meta }
                     }
             };
+            if (file.Progress == null && fileUpload.Progress != null)
+            {
+                file.Progress = p => Task.FromResult(fileUpload.Progress(p));
+            }
+
             return await http.SendFile<AmazonNode>(HttpMethod.Post, url, file).ConfigureAwait(false);
         }
     }

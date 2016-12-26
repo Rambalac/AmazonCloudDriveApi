@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Azi.Amazon.CloudDrive
 {
@@ -45,9 +46,15 @@ namespace Azi.Amazon.CloudDrive
         public int BufferSize { get; set; } = 81920;
 
         /// <summary>
-        /// Gets or sets action that receive progress and provide next position for progress report.
+        /// Gets or sets func that receive progress and provide next position for progress report.
         /// Next position is not guarantied and depends on upload buffer.
         /// </summary>
         public Func<long, long> Progress { get; set; } = null;
+
+        /// <summary>
+        /// Gets or sets async func that receive progress and provide next position for progress report as Task result.
+        /// Next position is not guarantied and depends on upload buffer.
+        /// </summary>
+        public Func<long, Task<long>> ProgressAsync { get; set; } = null;
     }
 }

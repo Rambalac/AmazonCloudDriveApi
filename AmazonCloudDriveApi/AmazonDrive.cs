@@ -51,10 +51,9 @@ namespace Azi.Amazon.CloudDrive
 
         private readonly string clientId;
         private readonly string clientSecret;
+        private readonly SemaphoreSlim tokenUpdateSem = new SemaphoreSlim(1, 1);
 
         private AuthToken authTokens;
-
-        private bool updatingToken;
 
         private WeakReference<ITokenUpdateListener> weakOnTokenUpdate;
 
@@ -204,6 +203,16 @@ namespace Azi.Amazon.CloudDrive
             return authTokens != null;
         }
 
+        private static async Task SendResponse(HttpListenerResponse response, byte[] body)
+        {
+            response.StatusCode = 200;
+            response.ContentLength64 = body.Length;
+            using (var output = response.OutputStream)
+            {
+                await output.WriteAsync(body, 0, body.Length);
+            }
+        }
+
         private static string ScopeToString(CloudDriveScopes scope) => string.Join(" ", Enum.GetValues(typeof(CloudDriveScopes)).Cast<CloudDriveScopes>().Where(v => scope.HasFlag(v)).Select(v => ScopeToStringMap[v]));
 
         private void CallOnTokenUpdate(string accessToken, string refreshToken, DateTime expiresIn)
@@ -256,9 +265,9 @@ namespace Azi.Amazon.CloudDrive
             return lastPort + 1;
         }
 
-        private async Task<string> GetContentUrl() => (await Account.GetEndpoint().ConfigureAwait(false)).contentUrl;
+        private async Task<string> GetContentUrl() => (await Account.GetEndpoint()).contentUrl;
 
-        private async Task<string> GetMetadataUrl() => (await Account.GetEndpoint().ConfigureAwait(false)).metadataUrl;
+        private async Task<string> GetMetadataUrl() => (await Account.GetEndpoint()).metadataUrl;
 
         private async Task<string> GetToken()
         {
@@ -269,7 +278,7 @@ namespace Azi.Amazon.CloudDrive
 
             if (authTokens.IsExpired)
             {
-                await UpdateToken().ConfigureAwait(false);
+                await UpdateToken();
             }
 
             return authTokens?.access_token;
@@ -286,24 +295,16 @@ namespace Azi.Amazon.CloudDrive
 
             var code = HttpUtility.ParseQueryString(context.Request.Url.Query).Get("code");
 
-            await SendResponse(context.Response, CloseTabResponse).ConfigureAwait(false);
+            await SendResponse(context.Response, CloseTabResponse);
 
-            await AuthenticationByCode(code, redirectUrl).ConfigureAwait(false);
-        }
-
-        private async Task SendResponse(HttpListenerResponse response, byte[] body)
-        {
-            response.StatusCode = 200;
-            response.ContentLength64 = body.Length;
-            await response.OutputStream.WriteAsync(body, 0, body.Length).ConfigureAwait(false);
-            response.OutputStream.Close();
+            await AuthenticationByCode(code, redirectUrl);
         }
 
         private async Task SettingsSetter(HttpWebRequest client)
         {
-            if ((authTokens != null) && !updatingToken)
+            if (authTokens != null && client.RequestUri.AbsoluteUri != TokenUrl)
             {
-                client.Headers.Add("Authorization", "Bearer " + await GetToken().ConfigureAwait(false));
+                client.Headers.Add("Authorization", "Bearer " + await GetToken());
             }
 
             client.CachePolicy = StandartCache;
@@ -325,7 +326,14 @@ namespace Azi.Amazon.CloudDrive
 
         private async Task UpdateToken()
         {
-            updatingToken = true;
+            var free = await tokenUpdateSem.WaitAsync(0);
+            if (!free)
+            {
+                await tokenUpdateSem.WaitAsync();
+                tokenUpdateSem.Release();
+                return;
+            }
+
             try
             {
                 var form = new Dictionary<string, string>
@@ -335,7 +343,7 @@ namespace Azi.Amazon.CloudDrive
                         { "client_id", clientId },
                         { "client_secret", clientSecret }
                     };
-                var newtoken = await http.PostForm<AuthToken>(TokenUrl, form).ConfigureAwait(false);
+                var newtoken = await http.PostForm<AuthToken>(TokenUrl, form);
                 if (newtoken != null)
                 {
                     authTokens = newtoken;
@@ -344,7 +352,7 @@ namespace Azi.Amazon.CloudDrive
             }
             finally
             {
-                updatingToken = false;
+                tokenUpdateSem.Release();
             }
         }
     }

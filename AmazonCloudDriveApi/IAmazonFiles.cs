@@ -83,5 +83,17 @@ namespace Azi.Amazon.CloudDrive
         /// <param name="fileUpload">Information about new file</param>
         /// <returns>Node info for new file</returns>
         Task<AmazonNode> UploadNew(FileUpload fileUpload);
+
+        /// <summary>
+        /// Downloads file to stream
+        /// </summary>
+        /// <param name="id">File id to download.</param>
+        /// <param name="stream">Stream to write file data into.</param>
+        /// <param name="fileOffset">Offset in file to download from. By default is null to start from the beginning.</param>
+        /// <param name="length">Length of part of file to download. By default is null to download everything to the end of file.</param>
+        /// <param name="bufferSize">Size of memory buffer. 4096 bytes by default.</param>
+        /// <param name="progressAsync">Async Func called on progress with number of total downloaded bytes. Return next not exact boundary to call progress again as Task result.</param>
+        /// <returns>Async task</returns>
+        Task Download(string id, Stream stream, long? fileOffset, long? length, int bufferSize, Func<long, Task<long>> progressAsync);
     }
 }

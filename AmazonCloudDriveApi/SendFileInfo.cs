@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Azi.Tools
 {
@@ -45,9 +46,9 @@ namespace Azi.Tools
         public int BufferSize { get; set; } = 81920;
 
         /// <summary>
-        /// Gets or sets Func that receive progress and provide next position for progress report.
+        /// Gets or sets Func that receive progress and provide next position for progress report as Task result.
         /// Next position is not guarantied and depends on buffer size.
         /// </summary>
-        public Func<long, long> Progress { get; set; } = null;
+        public Func<long, Task<long>> Progress { get; set; } = null;
     }
 }

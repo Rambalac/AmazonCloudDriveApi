@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
@@ -9,12 +13,15 @@ namespace Azi.Amazon.CloudDrive.Tests
 
         protected AmazonTestsBase()
         {
-            Amazon = Authenticate().Result;
-            var rootId = Amazon.Nodes.GetRoot().Result.id;
-            var testDir = TestDirBase + new Random().Next();
-            var node = Amazon.Nodes.GetChild(rootId, testDir).Result ??
-                       Amazon.Nodes.CreateFolder(rootId, testDir).Result;
-            TestDirId = node.id;
+            Task.Run(async () =>
+            {
+                Amazon = await Authenticate();
+                var rootId = (await Amazon.Nodes.GetRoot()).id;
+                var testDir = TestDirBase + new Random().Next();
+                var node = await Amazon.Nodes.GetChild(rootId, testDir) ??
+                           await Amazon.Nodes.CreateFolder(rootId, testDir);
+                TestDirId = node.id;
+            }).Wait();
         }
 
         protected async Task<AmazonDrive> Authenticate()

@@ -100,12 +100,46 @@ namespace Azi.Amazon.CloudDrive.Tests
             {
                 ParentId = TestDirId,
                 FileName = TestFileName,
-                StreamOpener = () => new MemoryStream(testFileContent),
+                StreamOpener = () =>
+                {
+                    totalProgressCalls = 0;
+                    return new MemoryStream(testFileContent);
+                },
+
                 BufferSize = 10,
                 Progress = (pos) =>
                 {
                     output.WriteLine(pos.ToString());
                     totalProgressCalls++;
+                    return pos + 10;
+                }
+            };
+
+            var node = await Amazon.Files.UploadNew(fileUpload);
+            Assert.NotNull(node);
+            Assert.Equal(138, totalProgressCalls); //Not only content, MIME headers are counted too
+        }
+
+        [Fact]
+        public async Task UploadNewProgressAsyncTest()
+        {
+            var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
+            var totalProgressCalls = 0;
+            var fileUpload = new FileUpload
+            {
+                ParentId = TestDirId,
+                FileName = TestFileName,
+                StreamOpener = () =>
+                {
+                    totalProgressCalls = 0;
+                    return new MemoryStream(testFileContent);
+                },
+                BufferSize = 10,
+                ProgressAsync = async pos =>
+                {
+                    output.WriteLine(pos.ToString());
+                    totalProgressCalls++;
+                    await Task.Delay(1);
                     return pos + 10;
                 }
             };

@@ -62,7 +62,7 @@ namespace Azi.Tools
         /// <returns>True if action was successful</returns>
         public static async Task<bool> Do(int times, Func<int, TimeSpan> retryDelay, Func<Task<bool>> act)
         {
-            return await Do(times, retryDelay, act, DefaultExceptionProcessorAsync).ConfigureAwait(false);
+            return await Do(times, retryDelay, act, DefaultExceptionProcessorAsync);
         }
 
         /// <summary>
@@ -86,16 +86,16 @@ namespace Azi.Tools
                 }
                 catch (Exception ex)
                 {
-                    if (await exceptionPocessor(ex).ConfigureAwait(false))
+                    if (await exceptionPocessor(ex))
                     {
                         return false;
                     }
                 }
 
-                await Task.Delay(retryDelay(time)).ConfigureAwait(false);
+                await Task.Delay(retryDelay(time));
             }
 
-            return await act().ConfigureAwait(false);
+            return await act();
         }
 
         /// <summary>
