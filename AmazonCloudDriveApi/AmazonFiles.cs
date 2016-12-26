@@ -66,7 +66,19 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator, CancellationToken? cancellation, Func<long, long> progress)
+        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator,CancellationToken? cancellation, Func<long, long> progress)
+        {
+            Func<long, Task<long>> progressAsync = null;
+            if (progress != null)
+            {
+                progressAsync = p => Task.FromResult(progress(p));
+            }
+
+            return await Files.Overwrite(id, streamCreator, cancellation, progressAsync);
+        }
+
+        /// <inheritdoc/>
+        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator, CancellationToken? cancellation, Func<long, Task<long>> progress)
         {
             var content = await GetContentUrl().ConfigureAwait(false);
             var url = $"{content}nodes/{id}/content";
@@ -75,12 +87,9 @@ namespace Azi.Amazon.CloudDrive
                 StreamOpener = streamCreator,
                 FileName = id,
                 FormName = "content",
+                Progress = progress,
                 CancellationToken = cancellation
             };
-            if (progress != null)
-            {
-                file.Progress = p => Task.FromResult(progress(p));
-            }
 
             return await http.SendFile<AmazonNode>(HttpMethod.Put, url, file).ConfigureAwait(false);
         }

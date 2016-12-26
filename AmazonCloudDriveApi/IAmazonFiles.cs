@@ -67,6 +67,16 @@ namespace Azi.Amazon.CloudDrive
         Task<AmazonNode> Overwrite(string id, Func<Stream> streamCreator, CancellationToken? token = null, Func<long, long> progress = null);
 
         /// <summary>
+        /// Overwrite file by id and stream
+        /// </summary>
+        /// <param name="id">File id to overwrite.</param>
+        /// <param name="streamCreator">Func returning Stream for data. Can be called multiple times if retry happened. Stream will be closed by method.</param>
+        /// <param name="token">Upload cancellation token</param>
+        /// <param name="progress">Async Func called on progress with number of total downloaded bytes. Return next not exact boundary to call progress again.</param>
+        /// <returns>Node info for overwritten file</returns>
+        Task<AmazonNode> Overwrite(string id, Func<Stream> streamCreator, CancellationToken? token, Func<long, Task<long>> progress);
+
+        /// <summary>
         /// Upload file to folder.
         /// </summary>
         /// <param name="parentId">Folder id for new file</param>
