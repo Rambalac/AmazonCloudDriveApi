@@ -432,9 +432,9 @@ namespace Azi.Tools
                                 using (var output = await client.GetRequestStreamAsync())
                                 {
                                     var state = new CopyStreamState();
-                                    await CopyStreams(pre, output, file, state);
+                                    await CopyStreams(pre, output, file, null);
                                     await CopyStreams(input, output, file, state);
-                                    await CopyStreams(post, output, file, state);
+                                    await CopyStreams(post, output, file, null);
                                 }
                             }
                             using (var response = (HttpWebResponse)await client.GetResponseAsync())
@@ -504,6 +504,7 @@ namespace Azi.Tools
         {
             var buffer = new byte[info.BufferSize];
             int bytesRead;
+            var lastProgessCalled = false;
             while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length)) > 0)
             {
                 if (info.CancellationToken != null && info.CancellationToken.Value.IsCancellationRequested)
@@ -512,11 +513,21 @@ namespace Azi.Tools
                 }
 
                 await destination.WriteAsync(buffer, 0, bytesRead);
-                state.Pos += bytesRead;
-                if (info.Progress != null && state.Pos >= state.NextPos)
+                lastProgessCalled = false;
+                if (state != null)
                 {
-                    state.NextPos = await info.Progress.Invoke(state.Pos);
+                    state.Pos += bytesRead;
+                    if (info.Progress != null && (state.Pos >= state.NextPos))
+                    {
+                        state.NextPos = await info.Progress.Invoke(state.Pos);
+                        lastProgessCalled = true;
+                    }
                 }
+            }
+
+            if (state != null && info.Progress != null && !lastProgessCalled)
+            {
+                await info.Progress.Invoke(state.Pos);
             }
         }
 

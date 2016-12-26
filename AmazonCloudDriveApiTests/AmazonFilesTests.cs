@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -96,6 +97,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var totalProgressCalls = 0;
+            long lastPos = 0;
             var fileUpload = new FileUpload
             {
                 ParentId = TestDirId,
@@ -111,13 +113,15 @@ namespace Azi.Amazon.CloudDrive.Tests
                 {
                     output.WriteLine(pos.ToString());
                     totalProgressCalls++;
-                    return pos + 10;
+                    lastPos = pos;
+                    return pos + 600;
                 }
             };
 
             var node = await Amazon.Files.UploadNew(fileUpload);
             Assert.NotNull(node);
-            Assert.Equal(138, totalProgressCalls); //Not only content, MIME headers are counted too
+            Assert.Equal(3, totalProgressCalls);
+            Assert.Equal(testFileContent.Length, lastPos);
         }
 
         [Fact]
@@ -146,7 +150,7 @@ namespace Azi.Amazon.CloudDrive.Tests
 
             var node = await Amazon.Files.UploadNew(fileUpload);
             Assert.NotNull(node);
-            Assert.Equal(138, totalProgressCalls); //Not only content, MIME headers are counted too
+            Assert.Equal(100, totalProgressCalls); 
         }
 
         [Fact]
