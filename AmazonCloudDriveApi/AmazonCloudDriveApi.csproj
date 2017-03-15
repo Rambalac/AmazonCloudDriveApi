@@ -38,7 +38,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>mykey.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>StrongSign.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -87,6 +87,7 @@
     <Compile Include="JsonObjects\Quota.cs" />
     <Compile Include="JsonObjects\TotalAndBillable.cs" />
     <Compile Include="JsonObjects\Usage.cs" />
+    <Compile Include="KeyToValue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Retry.cs" />
     <Compile Include="SendFileInfo.cs" />
@@ -95,10 +96,10 @@
     <None Include="AmazonCloudDriveApi.nuspec" />
     <None Include="AmazonCloudDriveApi.ruleset" />
     <None Include="App.config" />
-    <None Include="mykey.pfx" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="StrongSign.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />

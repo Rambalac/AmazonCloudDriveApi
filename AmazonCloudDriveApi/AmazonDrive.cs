@@ -67,19 +67,21 @@ namespace Azi.Amazon.CloudDrive
             this.clientSecret = clientSecret;
             this.clientId = clientId;
             http = new HttpClient(SettingsSetter);
-            http.AddRetryErrorProcessor(HttpStatusCode.Unauthorized, async (code) =>
+            http.RetryErrorProcessor.Add((int)HttpStatusCode.Unauthorized, async (code) =>
             {
                 await UpdateToken().ConfigureAwait(false);
                 return true;
             });
-            http.AddRetryErrorProcessor(429, async (code) =>
+            http.RetryErrorProcessor.Add(429, async (code) =>
             {
                 await Task.Delay(1000).ConfigureAwait(false);
                 return true;
             });
-            http.AddRetryErrorProcessor(500, (code) => Task.FromResult(true));
-            http.AddRetryErrorProcessor(504, (code) => Task.FromResult(true));
-            http.AddRetryErrorProcessor(HttpStatusCode.NotFound, (code) => Task.FromResult(false));
+            http.RetryErrorProcessor.Add(500, (code) => Task.FromResult(true));
+            http.RetryErrorProcessor.Add(504, (code) => Task.FromResult(true));
+            http.RetryErrorProcessor.Add((int)HttpStatusCode.NotFound, (code) => Task.FromResult(false));
+
+            http.FileSendRetryErrorProcessor.Add(429, code => Task.FromResult(false));
         }
 
         /// <inheritdoc/>

@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Azi.Amazon.CloudDrive;
 using Newtonsoft.Json;
 
 namespace Azi.Tools
@@ -20,13 +21,22 @@ namespace Azi.Tools
     internal class HttpClient
     {
         /// <summary>
+        /// Retry error processor
+        /// </summary>
+        /// <param name="code">Http code</param>
+        /// <returns>Return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.</returns>
+        public delegate Task<bool> RetryErrorProcessorDelegate(HttpStatusCode code);
+
+        /// <summary>
         /// Maximum number of retries.
         /// </summary>
         public const int RetryTimes = 100;
 
         private static readonly HashSet<HttpStatusCode> RetryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
-        private readonly Dictionary<int, Func<HttpStatusCode, Task<bool>>> retryErrorProcessor = new Dictionary<int, Func<HttpStatusCode, Task<bool>>>();
+
         private readonly Func<HttpWebRequest, Task> settingsSetter;
+        private KeyToValue<int, RetryErrorProcessorDelegate> retryErrorProcessorKeyToValue;
+        private KeyToValue<int, RetryErrorProcessorDelegate> fileSendRetryErrorProcessorKeyToValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClient"/> class.
@@ -36,9 +46,23 @@ namespace Azi.Tools
         public HttpClient(Func<HttpWebRequest, Task> settingsSetter)
         {
             this.settingsSetter = settingsSetter;
+            retryErrorProcessorKeyToValue = new KeyToValue<int, RetryErrorProcessorDelegate>(RetryErrorProcessor);
+            fileSendRetryErrorProcessorKeyToValue = new KeyToValue<int, RetryErrorProcessorDelegate>(FileSendRetryErrorProcessor, RetryErrorProcessor);
         }
 
-        private static Encoding UTF8 => new UTF8Encoding(false, true);
+        /// <summary>
+        /// Gets general Http error processors
+        /// </summary>
+        public Dictionary<int, RetryErrorProcessorDelegate> RetryErrorProcessor { get; } =
+            new Dictionary<int, RetryErrorProcessorDelegate>();
+
+        /// <summary>
+        /// Gets File Send Http error processors
+        /// </summary>
+        public Dictionary<int, RetryErrorProcessorDelegate> FileSendRetryErrorProcessor { get; } =
+            new Dictionary<int, RetryErrorProcessorDelegate>();
+
+        private static Encoding Utf8 => new UTF8Encoding(false, true);
 
         /// <summary>
         /// Returns delay interval depended on number of retries.
@@ -50,34 +74,7 @@ namespace Azi.Tools
             return TimeSpan.FromSeconds(1 << time);
         }
 
-        /// <summary>
-        /// Add Http error processor
-        /// </summary>
-        /// <param name="code">Http status</param>
-        /// <param name="func">func to return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.
-        /// Do not use method reference, use lamda or lamda with method call istead</param>
-        public void AddRetryErrorProcessor(HttpStatusCode code, Func<HttpStatusCode, Task<bool>> func)
-        {
-            retryErrorProcessor[(int)code] = func;
-        }
-
-        /// <summary>
-        /// Add Http error processor
-        /// </summary>
-        /// <param name="code">Http status code</param>
-        /// <param name="func">func to return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.
-        /// Do not use method reference, use lamda or lamda with method call istead</param>
-        public void AddRetryErrorProcessor(int code, Func<HttpStatusCode, Task<bool>> func)
-        {
-            retryErrorProcessor[code] = func;
-        }
-
-        /// <summary>
-        /// Processes exception to decide retry or abort.
-        /// </summary>
-        /// <param name="ex">Exception to process</param>
-        /// <returns>False if retry</returns>
-        public async Task<bool> GeneralExceptionProcessor(Exception ex)
+        private static async Task<bool> ExceptionProcessor(Exception ex, KeyToValue<int, RetryErrorProcessorDelegate> retryErrorProcessors)
         {
             if (ex is TaskCanceledException)
             {
@@ -85,23 +82,19 @@ namespace Azi.Tools
             }
 
             var webex = SearchForException<WebException>(ex);
-            var webresp = webex?.Response as HttpWebResponse;
-            if (webresp != null)
+            if (webex?.Response is HttpWebResponse webresp)
             {
                 if (RetryCodes.Contains(webresp.StatusCode))
                 {
                     return false;
                 }
 
-                Func<HttpStatusCode, Task<bool>> func;
-                if (retryErrorProcessor.TryGetValue((int)webresp.StatusCode, out func))
+                var processor = retryErrorProcessors[(int)webresp.StatusCode];
+                if (processor != null)
                 {
-                    if (func != null)
+                    if (await processor(webresp.StatusCode))
                     {
-                        if (await func(webresp.StatusCode))
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
 
@@ -237,6 +230,21 @@ namespace Azi.Tools
         }
 
         /// <summary>
+        /// Processes exception to decide retry or abort.
+        /// </summary>
+        /// <param name="ex">Exception to process</param>
+        /// <returns>False if retry</returns>
+        public async Task<bool> GeneralExceptionProcessor(Exception ex)
+        {
+            return await ExceptionProcessor(ex, retryErrorProcessorKeyToValue);
+        }
+
+        private async Task<bool> FileSendExceptionProcessor(Exception ex)
+        {
+            return await ExceptionProcessor(ex, fileSendRetryErrorProcessorKeyToValue);
+        }
+
+        /// <summary>
         /// Sends PATCH request with object serialized to JSON and get response as parsed JSON
         /// </summary>
         /// <typeparam name="TParam">Request object type</typeparam>
@@ -272,24 +280,6 @@ namespace Azi.Tools
         public async Task<TResult> PostForm<TResult>(string url, Dictionary<string, string> pars)
         {
             return await SendForm<TResult>(HttpMethod.Post, url, pars);
-        }
-
-        /// <summary>
-        /// Removes Http error processor
-        /// </summary>
-        /// <param name="code">Http status</param>
-        public void RemoveRetryErrorProcessor(HttpStatusCode code)
-        {
-            retryErrorProcessor.Remove((int)code);
-        }
-
-        /// <summary>
-        /// Removes Http error processor
-        /// </summary>
-        /// <param name="code">Http status code</param>
-        public void RemoveRetryErrorProcessor(int code)
-        {
-            retryErrorProcessor.Remove(code);
         }
 
         /// <summary>
@@ -454,7 +444,7 @@ namespace Azi.Tools
                             throw;
                         }
                     },
-                GeneralExceptionProcessor);
+                FileSendExceptionProcessor);
             return result;
         }
 
@@ -534,7 +524,7 @@ namespace Azi.Tools
         private static Stream GetMultipartFormPost(string boundry)
         {
             var result = new MemoryStream(1000);
-            using (var writer = new StreamWriter(result, UTF8, 16, true))
+            using (var writer = new StreamWriter(result, Utf8, 16, true))
             {
                 writer.Write($"\r\n--{boundry}--\r\n");
             }
@@ -546,7 +536,7 @@ namespace Azi.Tools
         private static Stream GetMultipartFormPre(SendFileInfo file, long filelength, string boundry)
         {
             var result = new MemoryStream(1000);
-            using (var writer = new StreamWriter(result, UTF8, 16, true))
+            using (var writer = new StreamWriter(result, Utf8, 16, true))
             {
                 if (file.Parameters != null)
                 {
