@@ -22,12 +22,12 @@ namespace Azi.Amazon.CloudDrive
     /// <summary>
     /// Root class for Amazon Cloud Drive API
     /// </summary>
-    public sealed partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive, IAmazonProfile
+    public sealed partial class AmazonDrive : IAmazonAccount, IAmazonFiles, IAmazonNodes, IAmazonDrive, IAmazonProfile, IDisposable
     {
+        private const string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>Please, allow popups if they got blocked";
         private const string LoginUrlBase = "https://www.amazon.com/ap/oa";
         private const string TokenUrl = "https://api.amazon.com/auth/o2/token";
-        private const string DefaultOpenAuthResponse = "<SCRIPT>var win=window.open('{0}', '_blank');var id=setInterval(function(){{if (win.closed||win.location.href.indexOf('localhost')>=0){{clearInterval(id);win.close(); window.close();}}}}, 500);</SCRIPT>Please, allow popups if they got blocked";
-
+        private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.close;</SCRIPT>You can close this tab");
         private static readonly TimeSpan GeneralExpiration = TimeSpan.FromMinutes(5);
 
         private static readonly Dictionary<CloudDriveScopes, string> ScopeToStringMap = new Dictionary<CloudDriveScopes, string>
@@ -43,14 +43,11 @@ namespace Azi.Amazon.CloudDrive
             { CloudDriveScopes.Profile_PostalCode, "postal_code" },
         };
 
-        private static readonly byte[] DefaultCloseTabResponse = Encoding.UTF8.GetBytes("<SCRIPT>window.close;</SCRIPT>You can close this tab");
-
         private static readonly RequestCachePolicy StandartCache = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
-
-        private readonly HttpClient http;
 
         private readonly string clientId;
         private readonly string clientSecret;
+        private readonly HttpClient http;
         private readonly SemaphoreSlim tokenUpdateSem = new SemaphoreSlim(1, 1);
 
         private AuthToken authTokens;
@@ -85,19 +82,19 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        public int ListenerPortStart { get; set; } = 45674;
+        public IAmazonAccount Account => this;
 
         /// <inheritdoc/>
-        public IAmazonAccount Account => this;
+        public byte[] CloseTabResponse { get; set; } = DefaultCloseTabResponse;
 
         /// <inheritdoc/>
         public IAmazonFiles Files => this;
 
         /// <inheritdoc/>
-        public IAmazonNodes Nodes => this;
+        public int ListenerPortStart { get; set; } = 45674;
 
         /// <inheritdoc/>
-        public IAmazonProfile Profile => this;
+        public IAmazonNodes Nodes => this;
 
         /// <inheritdoc/>
         public ITokenUpdateListener OnTokenUpdate
@@ -109,25 +106,10 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        public byte[] CloseTabResponse { get; set; } = DefaultCloseTabResponse;
+        public IAmazonProfile Profile => this;
 
         /// <inheritdoc/>
         public IWebProxy Proxy { get; set; }
-
-        /// <inheritdoc/>
-        public async Task<bool> AuthenticationByTokens(string authToken, string authRenewToken, DateTime authTokenExpiration)
-        {
-            authTokens = new AuthToken
-            {
-                expires_in = 0,
-                createdTime = authTokenExpiration,
-                access_token = authToken,
-                refresh_token = authRenewToken,
-                token_type = "bearer"
-            };
-            await UpdateToken().ConfigureAwait(false);
-            return authTokens != null;
-        }
 
         /// <inheritdoc/>
         public async Task<bool> AuthenticationByCode(string code, string redirectUrl)
@@ -151,14 +133,6 @@ namespace Azi.Amazon.CloudDrive
             await Account.GetEndpoint().ConfigureAwait(false);
 
             return true;
-        }
-
-        /// <inheritdoc/>
-        public string BuildLoginUrl(string redirectUrl, CloudDriveScopes scope)
-        {
-            Contract.Assert(redirectUrl != null);
-
-            return $"{LoginUrlBase}?client_id={clientId}&scope={ScopeToString(scope)}&response_type=code&redirect_uri={redirectUrl}";
         }
 
         /// <inheritdoc/>
@@ -205,6 +179,39 @@ namespace Azi.Amazon.CloudDrive
             return authTokens != null;
         }
 
+        /// <inheritdoc/>
+        public async Task<bool> AuthenticationByTokens(string authToken, string authRenewToken, DateTime authTokenExpiration)
+        {
+            authTokens = new AuthToken
+            {
+                expires_in = 0,
+                createdTime = authTokenExpiration,
+                access_token = authToken,
+                refresh_token = authRenewToken,
+                token_type = "bearer"
+            };
+            await UpdateToken().ConfigureAwait(false);
+            return authTokens != null;
+        }
+
+        /// <inheritdoc/>
+        public string BuildLoginUrl(string redirectUrl, CloudDriveScopes scope)
+        {
+            Contract.Assert(redirectUrl != null);
+
+            return $"{LoginUrlBase}?client_id={clientId}&scope={ScopeToString(scope)}&response_type=code&redirect_uri={redirectUrl}";
+        }
+
+        /// <summary>
+        /// Disposing Amazon Cloud Drive
+        /// </summary>
+        public void Dispose()
+        {
+            tokenUpdateSem?.Dispose();
+        }
+
+        private static string ScopeToString(CloudDriveScopes scope) => string.Join(" ", Enum.GetValues(typeof(CloudDriveScopes)).Cast<CloudDriveScopes>().Where(v => scope.HasFlag(v)).Select(v => ScopeToStringMap[v]));
+
         private static async Task SendResponse(HttpListenerResponse response, byte[] body)
         {
             response.StatusCode = 200;
@@ -215,12 +222,9 @@ namespace Azi.Amazon.CloudDrive
             }
         }
 
-        private static string ScopeToString(CloudDriveScopes scope) => string.Join(" ", Enum.GetValues(typeof(CloudDriveScopes)).Cast<CloudDriveScopes>().Where(v => scope.HasFlag(v)).Select(v => ScopeToStringMap[v]));
-
         private void CallOnTokenUpdate(string accessToken, string refreshToken, DateTime expiresIn)
         {
-            ITokenUpdateListener action;
-            if ((weakOnTokenUpdate != null) && weakOnTokenUpdate.TryGetTarget(out action))
+            if (weakOnTokenUpdate != null && weakOnTokenUpdate.TryGetTarget(out ITokenUpdateListener action))
             {
                 action.OnTokenUpdated(accessToken, refreshToken, expiresIn);
             }

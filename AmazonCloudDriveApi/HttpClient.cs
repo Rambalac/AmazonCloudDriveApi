@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
@@ -21,22 +22,19 @@ namespace Azi.Tools
     internal class HttpClient
     {
         /// <summary>
-        /// Retry error processor
-        /// </summary>
-        /// <param name="code">Http code</param>
-        /// <returns>Return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.</returns>
-        public delegate Task<bool> RetryErrorProcessorDelegate(HttpStatusCode code);
-
-        /// <summary>
         /// Maximum number of retries.
         /// </summary>
         public const int RetryTimes = 100;
 
         private static readonly HashSet<HttpStatusCode> RetryCodes = new HashSet<HttpStatusCode> { HttpStatusCode.ProxyAuthenticationRequired };
 
+        private readonly KeyToValue<int, RetryErrorProcessorDelegate> fileSendRetryErrorProcessorKeyToValue;
+        private readonly KeyToValue<int, RetryErrorProcessorDelegate> retryErrorProcessorKeyToValue;
         private readonly Func<HttpWebRequest, Task> settingsSetter;
-        private KeyToValue<int, RetryErrorProcessorDelegate> retryErrorProcessorKeyToValue;
-        private KeyToValue<int, RetryErrorProcessorDelegate> fileSendRetryErrorProcessorKeyToValue;
+
+#if DEBUG
+        private long clients;
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpClient"/> class.
@@ -51,15 +49,22 @@ namespace Azi.Tools
         }
 
         /// <summary>
-        /// Gets general Http error processors
+        /// Retry error processor
         /// </summary>
-        public Dictionary<int, RetryErrorProcessorDelegate> RetryErrorProcessor { get; } =
-            new Dictionary<int, RetryErrorProcessorDelegate>();
+        /// <param name="code">Http code</param>
+        /// <returns>Return true if request should be retried. Func reference will be stored as WeakReference, so be careful with anonymous func.</returns>
+        public delegate Task<bool> RetryErrorProcessorDelegate(HttpStatusCode code);
 
         /// <summary>
         /// Gets File Send Http error processors
         /// </summary>
         public Dictionary<int, RetryErrorProcessorDelegate> FileSendRetryErrorProcessor { get; } =
+            new Dictionary<int, RetryErrorProcessorDelegate>();
+
+        /// <summary>
+        /// Gets general Http error processors
+        /// </summary>
+        public Dictionary<int, RetryErrorProcessorDelegate> RetryErrorProcessor { get; } =
             new Dictionary<int, RetryErrorProcessorDelegate>();
 
         private static Encoding Utf8 => new UTF8Encoding(false, true);
@@ -74,34 +79,14 @@ namespace Azi.Tools
             return TimeSpan.FromSeconds(1 << time);
         }
 
-        private static async Task<bool> ExceptionProcessor(Exception ex, KeyToValue<int, RetryErrorProcessorDelegate> retryErrorProcessors)
+        /// <summary>
+        /// Processes exception to decide retry or abort.
+        /// </summary>
+        /// <param name="ex">Exception to process</param>
+        /// <returns>False if retry</returns>
+        public async Task<bool> GeneralExceptionProcessor(Exception ex)
         {
-            if (ex is TaskCanceledException)
-            {
-                throw ex;
-            }
-
-            var webex = SearchForException<WebException>(ex);
-            if (webex?.Response is HttpWebResponse webresp)
-            {
-                if (RetryCodes.Contains(webresp.StatusCode))
-                {
-                    return false;
-                }
-
-                var processor = retryErrorProcessors[(int)webresp.StatusCode];
-                if (processor != null)
-                {
-                    if (await processor(webresp.StatusCode))
-                    {
-                        return false;
-                    }
-                }
-
-                throw new HttpWebException(webex.Message, webresp.StatusCode);
-            }
-
-            throw ex;
+            return await ExceptionProcessor(ex, retryErrorProcessorKeyToValue);
         }
 
         /// <summary>
@@ -112,7 +97,9 @@ namespace Azi.Tools
         public async Task<HttpWebRequest> GetHttpClient(string url)
         {
             var result = (HttpWebRequest)WebRequest.Create(url);
-
+#if DEBUG
+            Debug.WriteLine("Client created: " + clients++);
+#endif
             await settingsSetter(result);
             return result;
         }
@@ -227,21 +214,6 @@ namespace Azi.Tools
                         return true;
                     },
                 GeneralExceptionProcessor);
-        }
-
-        /// <summary>
-        /// Processes exception to decide retry or abort.
-        /// </summary>
-        /// <param name="ex">Exception to process</param>
-        /// <returns>False if retry</returns>
-        public async Task<bool> GeneralExceptionProcessor(Exception ex)
-        {
-            return await ExceptionProcessor(ex, retryErrorProcessorKeyToValue);
-        }
-
-        private async Task<bool> FileSendExceptionProcessor(Exception ex)
-        {
-            return await ExceptionProcessor(ex, fileSendRetryErrorProcessorKeyToValue);
         }
 
         /// <summary>
@@ -412,18 +384,23 @@ namespace Azi.Tools
 
                             var boundry = Guid.NewGuid().ToString();
                             client.ContentType = $"multipart/form-data; boundary={boundry}";
-                            client.SendChunked = true;
+                            client.SendChunked = false;
 
                             using (var input = file.StreamOpener())
                             {
                                 var pre = GetMultipartFormPre(file, input.Length, boundry);
                                 var post = GetMultipartFormPost(boundry);
-                                client.ContentLength = pre.Length + input.Length + post.Length;
+                                var clientContentLength = pre.Length + input.Length + post.Length;
+                                client.ContentLength = clientContentLength;
+
+                                file.CancellationToken.ThrowIfCancellationRequested();
+
                                 using (var output = await client.GetRequestStreamAsync())
                                 {
                                     var state = new CopyStreamState();
                                     await CopyStreams(pre, output, file, null);
                                     await CopyStreams(input, output, file, state);
+
                                     await CopyStreams(post, output, file, null);
                                 }
                             }
@@ -495,14 +472,9 @@ namespace Azi.Tools
             var buffer = new byte[info.BufferSize];
             int bytesRead;
             var lastProgessCalled = false;
-            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, info.CancellationToken)) > 0)
             {
-                if (info.CancellationToken != null && info.CancellationToken.Value.IsCancellationRequested)
-                {
-                    throw new TaskCanceledException();
-                }
-
-                await destination.WriteAsync(buffer, 0, bytesRead);
+                await destination.WriteAsync(buffer, 0, bytesRead, info.CancellationToken);
                 lastProgessCalled = false;
                 if (state != null)
                 {
@@ -519,6 +491,46 @@ namespace Azi.Tools
             {
                 await info.Progress.Invoke(state.Pos);
             }
+        }
+
+        private static async Task<bool> ExceptionProcessor(Exception ex, KeyToValue<int, RetryErrorProcessorDelegate> retryErrorProcessors)
+        {
+            if (ex is TaskCanceledException)
+            {
+                throw ex;
+            }
+
+            var webex = SearchForException<WebException>(ex);
+            if (webex?.Response is HttpWebResponse webresp)
+            {
+                if (RetryCodes.Contains(webresp.StatusCode))
+                {
+                    return false;
+                }
+
+                var processor = retryErrorProcessors[(int)webresp.StatusCode];
+                if (processor != null)
+                {
+                    if (await processor(webresp.StatusCode))
+                    {
+                        return false;
+                    }
+                }
+
+                using (var str = webresp.GetResponseStream())
+                {
+                    if (str != null)
+                    {
+                        var reader = new StreamReader(str);
+                        var text = await reader.ReadToEndAsync();
+                        throw new HttpWebException(webex.Message, webresp.StatusCode, text);
+                    }
+                }
+
+                throw new HttpWebException(webex.Message, webresp.StatusCode);
+            }
+
+            throw ex;
         }
 
         private static Stream GetMultipartFormPost(string boundry)
@@ -548,7 +560,8 @@ namespace Azi.Tools
                 }
 
                 writer.Write($"--{boundry}\r\n");
-                writer.Write($"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
+                writer.Write(
+                    $"Content-Disposition: form-data; name=\"{file.FormName}\"; filename={file.FileName}\r\n");
                 writer.Write("Content-Type: application/octet-stream\r\n");
 
                 writer.Write($"Content-Length: {filelength}\r\n\r\n");
@@ -596,6 +609,11 @@ namespace Azi.Tools
             }
 
             return null;
+        }
+
+        private async Task<bool> FileSendExceptionProcessor(Exception ex)
+        {
+            return await ExceptionProcessor(ex, fileSendRetryErrorProcessorKeyToValue);
         }
 
         private class CopyStreamState

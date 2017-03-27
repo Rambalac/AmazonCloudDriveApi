@@ -38,7 +38,7 @@ namespace Azi.Tools
         /// <summary>
         /// Gets or sets upload Cancellation Token
         /// </summary>
-        public CancellationToken? CancellationToken { get; set; } = null;
+        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
 
         /// <summary>
         /// Gets or sets size of memory buffer for stream operations

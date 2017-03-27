@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
+using Azi.Amazon.CloudDrive.JsonObjects;
+using Azi.Tools;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -22,6 +23,38 @@ namespace Azi.Amazon.CloudDrive.Tests
                            await Amazon.Nodes.CreateFolder(rootId, testDir);
                 TestDirId = node.id;
             }).Wait();
+        }
+
+        protected async Task<AmazonNode> ForceRetry(Func<Task<AmazonNode>> action)
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                try
+                {
+                    return await action();
+                }
+                catch (HttpWebException ex) when ((int)ex.StatusCode == 429)
+                {
+                    await Task.Delay(1000);
+                }
+            }
+            throw new Exception("Retied too much");
+        }
+
+        protected async Task<AmazonNode> ForceUploadNew(FileUpload fu)
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                try
+                {
+                    return await Amazon.Files.UploadNew(fu);
+                }
+                catch (HttpWebException ex) when ((int)ex.StatusCode == 429)
+                {
+                    await Task.Delay(1000);
+                }
+            }
+            throw new Exception("Retied too much");
         }
 
         protected async Task<AmazonDrive> Authenticate()

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -26,7 +25,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         {
             var testName = "testfile.txt";
             var testFileContent1 = Enumerable.Range(1, 100).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, testName, () => new MemoryStream(testFileContent1));
+            var testFile = await ForceRetry(async ()=>await Amazon.Files.UploadNew(TestDirId, testName, () => new MemoryStream(testFileContent1)));
             Assert.Equal(testName, testFile.name);
 
             var memStr = new MemoryStream();
@@ -52,7 +51,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task UploadNameTest(string testName)
         {
             var testFileContent = Enumerable.Range(1, 100).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, testName, () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async ()=>await Amazon.Files.UploadNew(TestDirId, testName, () => new MemoryStream(testFileContent)));
             Assert.Equal(testName, testFile.name);
 
             var memStr = new MemoryStream();
@@ -61,11 +60,11 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.Equal(testFileContent, memStr.ToArray());
         }
 
-        [Fact(Skip = "API does not support zero length")]
+        [Fact]
         public async Task UploadZeroLengthTest()
         {
             var testFileContent = new byte[0];
-            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async ()=>await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent)));
             Assert.Equal(0, testFile.Length);
 
             var memStr = new MemoryStream();
@@ -89,7 +88,7 @@ namespace Azi.Amazon.CloudDrive.Tests
                 CancellationToken = token.Token
             };
 
-            await Assert.ThrowsAsync<TaskCanceledException>(async () => await Amazon.Files.UploadNew(fileUpload));
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await ForceRetry(async ()=>await Amazon.Files.UploadNew(fileUpload)));
         }
 
         [Fact]
@@ -118,7 +117,7 @@ namespace Azi.Amazon.CloudDrive.Tests
                 }
             };
 
-            var node = await Amazon.Files.UploadNew(fileUpload);
+            var node = await ForceRetry(async ()=>await Amazon.Files.UploadNew(fileUpload));
             Assert.NotNull(node);
             Assert.Equal(3, totalProgressCalls);
             Assert.Equal(testFileContent.Length, lastPos);
@@ -148,7 +147,7 @@ namespace Azi.Amazon.CloudDrive.Tests
                 }
             };
 
-            var node = await Amazon.Files.UploadNew(fileUpload);
+            var node = await ForceRetry(async ()=>await Amazon.Files.UploadNew(fileUpload));
             Assert.NotNull(node);
             Assert.Equal(100, totalProgressCalls); 
         }
@@ -157,7 +156,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task DownloadWithProgressCancelTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async ()=>await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent)));
 
             var memStr = new MemoryStream();
             await Assert.ThrowsAsync<OperationCanceledException>(async () =>
@@ -174,7 +173,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task DownloadWithProgressTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async ()=>await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent)));
 
             var memStr = new MemoryStream();
             await Amazon.Files.Download(testFile.id, memStr, progress: Progress1);
@@ -186,7 +185,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task DownloadWithSeekableStreamTest()
         {
             var testFileContent = Enumerable.Range(0, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async ()=>await Amazon.Files.UploadNew(TestDirId, TestFileName, () => new MemoryStream(testFileContent)));
 
             var stream = await Amazon.Files.Download(testFile.id);
 

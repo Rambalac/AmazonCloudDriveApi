@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Azi.Amazon.CloudDrive.Tests
 {
@@ -15,7 +14,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task GetNodeTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
 
             await Task.Delay(1000);
 
@@ -29,7 +28,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task GetNodeExtendedTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
 
             var node = await Amazon.Nodes.GetNodeExtended(testFile.id);
             Assert.NotNull(node.tempLink);
@@ -41,8 +40,8 @@ namespace Azi.Amazon.CloudDrive.Tests
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
             var testSubDir = await Amazon.Nodes.CreateFolder(TestDirId, "TestDir");
 
-            var testFile1 = await Amazon.Files.UploadNew(testSubDir.id, "testfile1.txt", () => new MemoryStream(testFileContent));
-            var testFile2 = await Amazon.Files.UploadNew(testSubDir.id, "testfile2.txt", () => new MemoryStream(testFileContent));
+            var testFile1 = await ForceRetry(async () => await Amazon.Files.UploadNew(testSubDir.id, "testfile1.txt", () => new MemoryStream(testFileContent)));
+            var testFile2 = await ForceRetry(async () => await Amazon.Files.UploadNew(testSubDir.id, "testfile2.txt", () => new MemoryStream(testFileContent)));
 
             await Task.Delay(1000);
 
@@ -61,7 +60,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task GetChildTest(string name)
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, name, () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, name, () => new MemoryStream(testFileContent)));
 
             await Task.Delay(1000);
 
@@ -75,7 +74,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task AddRemoveTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile1 = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile1 = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
             await Task.Delay(1000);
 
             var testSubDir = await Amazon.Nodes.CreateFolder(TestDirId, "TestDir");
@@ -100,7 +99,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task TrashTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile1 = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile1 = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
             await Task.Delay(1000);
 
             var testSubDir = await Amazon.Nodes.CreateFolder(TestDirId, "TestDir");
@@ -135,7 +134,7 @@ namespace Azi.Amazon.CloudDrive.Tests
         public async Task RenameTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
 
             await Task.Delay(1000);
 
@@ -152,11 +151,12 @@ namespace Azi.Amazon.CloudDrive.Tests
             Assert.Equal("newname.txt", node2.name);
         }
 
+
         [Fact]
         public async Task MoveTest()
         {
             var testFileContent = Enumerable.Range(1, 1000).Select(i => (byte)(i & 255)).ToArray();
-            var testFile1 = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile1 = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
             await Task.Delay(1000);
 
             Assert.Equal(TestDirId, testFile1.parents.Single());
@@ -186,7 +186,7 @@ namespace Azi.Amazon.CloudDrive.Tests
             rand.GetBytes(testFileContent);
             var md5 = GetMd5Hash(testFileContent).ToUpperInvariant();
 
-            var testFile = await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent));
+            var testFile = await ForceRetry(async () => await Amazon.Files.UploadNew(TestDirId, "testfile.txt", () => new MemoryStream(testFileContent)));
 
             await Task.Delay(1000);
 

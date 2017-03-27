@@ -66,7 +66,7 @@ namespace Azi.Amazon.CloudDrive
         }
 
         /// <inheritdoc/>
-        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator,CancellationToken? cancellation, Func<long, long> progress)
+        async Task<AmazonNode> IAmazonFiles.Overwrite(string id, Func<Stream> streamCreator, CancellationToken? cancellation, Func<long, long> progress)
         {
             Func<long, Task<long>> progressAsync = null;
             if (progress != null)
@@ -88,7 +88,7 @@ namespace Azi.Amazon.CloudDrive
                 FileName = id,
                 FormName = "content",
                 Progress = progress,
-                CancellationToken = cancellation
+                CancellationToken = cancellation ?? CancellationToken.None
             };
 
             return await http.SendFile<AmazonNode>(HttpMethod.Put, url, file).ConfigureAwait(false);

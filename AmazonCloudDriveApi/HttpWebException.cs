@@ -19,6 +19,20 @@ namespace Azi.Tools
         /// </summary>
         /// <param name="message">Message</param>
         /// <param name="code">Status code</param>
+        /// <param name="content">Content of error response</param>
+        public HttpWebException(string message, HttpStatusCode code, string content)
+            : base(message)
+        {
+            Content = content;
+            StatusCode = code;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HttpWebException"/> class.
+        /// Creates exception with message and HTTP status code
+        /// </summary>
+        /// <param name="message">Message</param>
+        /// <param name="code">Status code</param>
         public HttpWebException(string message, HttpStatusCode code)
             : base(message)
         {
@@ -37,6 +51,11 @@ namespace Azi.Tools
         {
             StatusCode = code;
         }
+
+        /// <summary>
+        /// Gets Content of error response
+        /// </summary>
+        public string Content { get; }
 
         /// <summary>
         /// Gets HTTP Status Code
